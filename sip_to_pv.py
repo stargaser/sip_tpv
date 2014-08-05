@@ -158,7 +158,7 @@ def calc_sipexprs(cd, ac, bc):
     for m in range(8):
         for n in range(0,8-m):
             usum += ac[m,n]*uprime**m*vprime**n
-            vsum += ac[m,n]*uprime**m*vprime**n
+            vsum += bc[m,n]*uprime**m*vprime**n
     sipx, sipy = cd*Matrix([usum, vsum])
     sipx = sipx.expand()
     sipy = sipy.expand()
