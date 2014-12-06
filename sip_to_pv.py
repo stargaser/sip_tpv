@@ -33,46 +33,56 @@ import numpy as np
 import astropy.io.fits as pyfits
 from collections import OrderedDict
 
+def calc_tpvexprs():
+    """ calculate the Sympy expression for TPV distortion
 
-# Set up Sympy symbols needed later
-for name in ["x", "y"]:
-    globals()[name] = symbols(name)
-pvrange = range(0,39)
-pvrange.remove(3)
-pvrange.remove(11)
-pvrange.remove(23)
-for k in 1,2:
-    for p in pvrange:
-        name = "pv%d_%d" % (k,p)
-        globals()[name] = symbols(name)
+    Parameters:
+    -----------
+    None
 
-# Copy the equations from the PV-to-SIP paper and convert to code,
-#  leaving out radial terms PV[1,3], PV[1,11], PV[1,23], PV[1,39]
+    Returns:
+    --------
+    pvrange (list) : indices to the PV keywords
+    tpvx (Sympy expr) : equation for x-distortion in TPV convention
+    tpvy (Sympy expr) : equation for y-distortion in TPV convention
+    """
+    x, y = symbols("x y")
+    pvrange = range(0,39)
+    pvrange.remove(3)
+    pvrange.remove(11)
+    pvrange.remove(23)
+    for k in 1,2:
+        for p in pvrange:
+            name = "pv%d_%d" % (k,p)
+            exec('%s = symbols("%s")'%(name,name))
 
-tpvx = pv1_0 + pv1_1*x + pv1_2*y + pv1_4*x**2 + pv1_5*x*y + pv1_6*y**2 + \
-    pv1_7*x**3 + pv1_8*x**2*y + pv1_9*x*y**2 + pv1_10*y**3 +  \
-    pv1_12*x**4 + pv1_13*x**3*y + pv1_14*x**2*y**2 + pv1_15*x*y**3 + pv1_16*y**4 + \
-    pv1_17*x**5 + pv1_18*x**4*y + pv1_19*x**3*y**2 + pv1_20*x**2*y**3 + pv1_21*x*y**4 + \
-         pv1_22*y**5 + \
-    pv1_24*x**6 + pv1_25*x**5*y + pv1_26*x**4*y**2 + pv1_27*x**3*y**3 + \
+    # Copy the equations from the PV-to-SIP paper and convert to code,
+    #  leaving out radial terms PV[1,3], PV[1,11], PV[1,23], PV[1,39]
+
+    tpvx = pv1_0 + pv1_1*x + pv1_2*y + pv1_4*x**2 + pv1_5*x*y + pv1_6*y**2 + \
+        pv1_7*x**3 + pv1_8*x**2*y + pv1_9*x*y**2 + pv1_10*y**3 +  \
+        pv1_12*x**4 + pv1_13*x**3*y + pv1_14*x**2*y**2 + pv1_15*x*y**3 + pv1_16*y**4 + \
+        pv1_17*x**5 + pv1_18*x**4*y + pv1_19*x**3*y**2 + pv1_20*x**2*y**3 + pv1_21*x*y**4 + \
+        pv1_22*y**5 + \
+        pv1_24*x**6 + pv1_25*x**5*y + pv1_26*x**4*y**2 + pv1_27*x**3*y**3 + \
         pv1_28*x**2*y**4 + pv1_29*x*y**5 + pv1_30*y**6 + \
-    pv1_31*x**7 + pv1_32*x**6*y + pv1_33*x**5*y**2 + pv1_34*x**4*y**3 + \
+        pv1_31*x**7 + pv1_32*x**6*y + pv1_33*x**5*y**2 + pv1_34*x**4*y**3 + \
         pv1_35*x**3*y**4 + pv1_36*x**2*y**5 + pv1_37*x*y**6 + pv1_38*y**7
-tpvx = tpvx.expand()
+    tpvx = tpvx.expand()
 
-tpvy = pv2_0 + pv2_1*y + pv2_2*x + pv2_4*y**2 + pv2_5*y*x + pv2_6*x**2 + \
-    pv2_7*y**3 + pv2_8*y**2*x + pv2_9*y*x**2 + pv2_10*x**3 + \
-    pv2_12*y**4 + pv2_13*y**3*x + pv2_14*y**2*x**2 + pv2_15*y*x**3 + pv2_16*x**4 + \
-    pv2_17*y**5 + pv2_18*y**4*x + pv2_19*y**3*x**2 + pv2_20*y**2*x**3 + pv2_21*y*x**4 + \
+    tpvy = pv2_0 + pv2_1*y + pv2_2*x + pv2_4*y**2 + pv2_5*y*x + pv2_6*x**2 + \
+        pv2_7*y**3 + pv2_8*y**2*x + pv2_9*y*x**2 + pv2_10*x**3 + \
+        pv2_12*y**4 + pv2_13*y**3*x + pv2_14*y**2*x**2 + pv2_15*y*x**3 + pv2_16*x**4 + \
+        pv2_17*y**5 + pv2_18*y**4*x + pv2_19*y**3*x**2 + pv2_20*y**2*x**3 + pv2_21*y*x**4 + \
         pv2_22*x**5 + \
-    pv2_24*y**6 + pv2_25*y**5*x + pv2_26*y**4*x**2 + pv2_27*y**3*x**3 + \
+        pv2_24*y**6 + pv2_25*y**5*x + pv2_26*y**4*x**2 + pv2_27*y**3*x**3 + \
         pv2_28*y**2*x**4 + pv2_29*y*x**5 + pv2_30*x**6 + \
-    pv2_31*y**7 + pv2_32*y**6*x + pv2_33*y**5*x**2 + pv2_34*y**4*x**3 + \
+        pv2_31*y**7 + pv2_32*y**6*x + pv2_33*y**5*x**2 + pv2_34*y**4*x**3 + \
         pv2_35*y**3*x**4 + pv2_36*y**2*x**5 + pv2_37*y*x**6 + pv2_38*x**7
-tpvy = tpvy.expand()
+    tpvy = tpvy.expand()
+    return(pvrange, tpvx, tpvy)
 
-
-def calcpv(pvinx1, pvinx2, sipx, sipy, tpvx=tpvx, tpvy=tpvy):
+def calcpv(pvinx1, pvinx2, sipx, sipy, tpvx, tpvy):
     """Calculate the PV coefficient expression as a function of CD matrix
     parameters and SIP coefficients
 
@@ -89,6 +99,7 @@ def calcpv(pvinx1, pvinx2, sipx, sipy, tpvx=tpvx, tpvy=tpvy):
     --------
     Expression of CD matrix elements and SIP polynomial coefficients
     """
+    x, y = symbols("x y")
     if (pvinx1 == 1):
         expr1 = tpvx
         expr2 = sipx
@@ -99,7 +110,7 @@ def calcpv(pvinx1, pvinx2, sipx, sipy, tpvx=tpvx, tpvy=tpvy):
         raise Valuerror, 'incorrect first index to PV keywords'
     if (pvinx2 not in pvrange):
         raise ValueError, 'incorrect second index to PV keywords'
-    pvar = globals()['pv%d_%d'%(pvinx1, pvinx2)]
+    exec("pvar = 'pv%d_%d'"%(pvinx1, pvinx2))
     xord = yord = 0
     if expr1.coeff(pvar).has(x): xord = poly(expr1.coeff(pvar)).degree(x)
     if expr1.coeff(pvar).has(y): yord = poly(expr1.coeff(pvar)).degree(y)
@@ -146,6 +157,7 @@ def calc_sipexprs(cd, ac, bc):
     sipx (Sympy expr) : equation for x-distortion in SIP convention
     sipy (Sympy expr) : equation for y-distortion in SIP convention
     """
+    x, y = symbols("x y")
     cdinverse = cd**-1
     invcd11 = cdinverse[0,0]
     invcd12 = cdinverse[0,1]
@@ -165,7 +177,7 @@ def calc_sipexprs(cd, ac, bc):
     return(sipx, sipy)
 
 
-def add_pv_keywords(header, sipx, sipy, tpv=True):
+def add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=True):
     """Calculate the PV keywords and add to the header
 
     Parameters:
@@ -178,11 +190,11 @@ def add_pv_keywords(header, sipx, sipy, tpv=True):
     None (header is modified in place)
     """
     for p in pvrange:
-        val = float(calcpv(1,p,sipx,sipy).evalf())
+        val = float(calcpv(1,p,sipx,sipy, tpvx, tpvy).evalf())
         if val != 0.0:
             header['PV1_%d'%p] =  val
     for p in pvrange:
-        val = float(calcpv(2,p,sipx,sipy).evalf())
+        val = float(calcpv(2,p,sipx,sipy, tpvx, tpvy).evalf())
         if val != 0.0:
             header['PV2_%d'%p] = val
     if tpv:
@@ -270,9 +282,10 @@ if __name__=="__main__":
     args = parser.parse_args()
     hdu = pyfits.open(args.infile)
     header = hdu[args.extension].header
+    pvrange, tpvx, tpvy = calc_tpvexprs()
     cd, ac, bc = get_sip_keywords(header)
     sipx, sipy = calc_sipexprs(cd, ac, bc)
-    add_pv_keywords(header, sipx, sipy, tpv=args.tpv_format)
+    add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=args.tpv_format)
     if (not args.preserve):
         remove_sip_keywords(header)
     hdu.writeto(args.outfile, clobber=args.clobber)
