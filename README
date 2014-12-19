@@ -20,6 +20,9 @@ If you make use of this work, please cite:
   Levitan, David; Sesar, Branimir, 2012, in Software and Cyberinfrastructure for
   Astronomy II. Proceedings of the SPIE, Volume 8451, article id. 84511M.
 
+Thanks to Octavi Fors for contributing code modifications for better modularization,
+   and for extensive testing.
+
 Funding is acknowledged from NASA to the NASA Herschel Science Center and the
    Spitzer Science Center.
 

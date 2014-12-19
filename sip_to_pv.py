@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Licensed under a 3-clause BSD style license - see LICENSE.txt
 """
 Convert SIP convention distortion keywords to the TPV convention.
@@ -18,6 +16,9 @@ If you make use of this work, please cite:
   Levitan, David; Sesar, Branimir, 2012, in Software and Cyberinfrastructure for
   Astronomy II. Proceedings of the SPIE, Volume 8451, article id. 84511M.
 
+Thanks to Octavi Fors for contributing code modifications for better modularization,
+   and for extensive testing.
+
 Funding is acknowledged from NASA to the NASA Herschel Science Center and the
    Spitzer Science Center.
 
@@ -32,6 +33,7 @@ from sympy.tensor import IndexedBase, Idx
 import numpy as np
 import astropy.io.fits as pyfits
 from collections import OrderedDict
+import os
 
 def calc_tpvexprs():
     """ calculate the Sympy expression for TPV distortion
@@ -82,12 +84,13 @@ def calc_tpvexprs():
     tpvy = tpvy.expand()
     return(pvrange, tpvx, tpvy)
 
-def calcpv(pvinx1, pvinx2, sipx, sipy, tpvx, tpvy):
+def calcpv(pvrange,pvinx1, pvinx2, sipx, sipy, tpvx, tpvy):
     """Calculate the PV coefficient expression as a function of CD matrix
     parameters and SIP coefficients
 
     Parameters:
     -----------
+    pvrange (list) : indices to the PV keywords
     pvinx1 (int): first index, 1 or 2
     pvinx2 (int): second index
     tpvx (Sympy expr) : equation for x-distortion in TPV convention
@@ -190,11 +193,11 @@ def add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=True):
     None (header is modified in place)
     """
     for p in pvrange:
-        val = float(calcpv(1,p,sipx,sipy, tpvx, tpvy).evalf())
+        val = float(calcpv(pvrange,1,p,sipx,sipy, tpvx, tpvy).evalf())
         if val != 0.0:
             header['PV1_%d'%p] =  val
     for p in pvrange:
-        val = float(calcpv(2,p,sipx,sipy, tpvx, tpvy).evalf())
+        val = float(calcpv(pvrange,2,p,sipx,sipy, tpvx, tpvy).evalf())
         if val != 0.0:
             header['PV2_%d'%p] = val
     if tpv:
@@ -259,35 +262,33 @@ def remove_sip_keywords(header):
     return
 
 
+def sip_to_pv(infile,outfile,tpv_format=True,preserve=False,extension=0,clobber=True):
+    """ Function which wraps the sip_to_pv conversion
 
-# Commands for invoking the script here
-if __name__=="__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Convert SIP distortion keywords" + \
-        " (up to 7th order) to PV or TPV conventions")
-    parser.add_argument("-t", "--tpv_format",
-            help="modify CTYPE1 and CTYPE2 to TPV convention RA---TPV, DEC--TPV",
-            action="store_true")
-    parser.add_argument("-c", "--clobber",
-            help="clobber output file if it exists already (default is to not overwrite)",
-            action="store_true")
-    parser.add_argument("-p", "--preserve",
-            help="preserve the SIP keywords in the header (default is to delete)",
-            action="store_true")
-    parser.add_argument("-e", "--extension",
-            help="extension of FITS file containing SIP header (default 0)",
-            type=int, default=0)
-    parser.add_argument("infile", help="path to input FITS file containing SIP keywords")
-    parser.add_argument("outfile", help="path to input FITS file containing SIP keywords")
-    args = parser.parse_args()
-    hdu = pyfits.open(args.infile)
-    header = hdu[args.extension].header
+    Parameters:
+    -----------
+    infile   (string) : name of input FITS file with TAN-SIP projection
+    outfile (string) : name of output FITS file with TAN-TPV projection
+    tpv_format (boolean) : modify CTYPE1 and CTYPE2 to TPV convention RA---TPV, DEC--TPV?
+    preserve (boolean) : preserve the SIP keywords in the header (default is to delete)?
+    extension (integer) : extension of FITS file containing SIP header (default 0)?
+
+    Returns:
+    --------
+    True if TPV file has been created, False if not
+    """
+    hdu = pyfits.open(infile)
+    header = hdu[extension].header
     pvrange, tpvx, tpvy = calc_tpvexprs()
     cd, ac, bc = get_sip_keywords(header)
     sipx, sipy = calc_sipexprs(cd, ac, bc)
-    add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=args.tpv_format)
-    if (not args.preserve):
+    add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=tpv_format)
+    if (not preserve):
         remove_sip_keywords(header)
-    hdu.writeto(args.outfile, clobber=args.clobber)
+    hdu.writeto(outfile, clobber=clobber)
 
+    if os.path.exists(outfile):
+      return True
+    else:
+      return False
 
