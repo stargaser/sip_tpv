@@ -237,10 +237,10 @@ def remove_sip_keywords(header):
     --------
     None (header is modified in place)
     """
-    aorder = header.get('A_ORDER', 0.0)
-    border = header.get('B_ORDER', 0.0)
-    aporder = header.get('AP_ORDER', 0.0)
-    bporder = header.get('BP_ORDER', 0.0)
+    aorder = int(header.get('A_ORDER', 0.0))
+    border = int(header.get('B_ORDER', 0.0))
+    aporder = int(header.get('AP_ORDER', 0.0))
+    bporder = int(header.get('BP_ORDER', 0.0))
     for m in range(aorder+1):
         for n in range(0,aorder+1-m):
             removekwd(header,'A_%d_%d'%(m,n))
