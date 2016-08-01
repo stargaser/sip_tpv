@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function, absolute_import, division
+
 # Licensed under a 3-clause BSD style license - see LICENSE.txt
 """
 Convert SIP convention distortion keywords to the TPV convention.
@@ -47,38 +49,36 @@ def calc_tpvexprs():
     tpvy (Sympy expr) : equation for y-distortion in TPV convention
     """
     x, y = symbols("x y")
-    pvrange = range(0,39)
+    pvrange = list(range(0,39))
     pvrange.remove(3)
     pvrange.remove(11)
     pvrange.remove(23)
-    for k in 1,2:
-        for p in pvrange:
-            name = "pv%d_%d" % (k,p)
-            exec('%s = symbols("%s")'%(name,name))
+    pv1 = symbols('pv1_0:39')
+    pv2 = symbols('pv2_0:39')
 
     # Copy the equations from the PV-to-SIP paper and convert to code,
     #  leaving out radial terms PV[1,3], PV[1,11], PV[1,23], PV[1,39]
 
-    tpvx = pv1_0 + pv1_1*x + pv1_2*y + pv1_4*x**2 + pv1_5*x*y + pv1_6*y**2 + \
-        pv1_7*x**3 + pv1_8*x**2*y + pv1_9*x*y**2 + pv1_10*y**3 +  \
-        pv1_12*x**4 + pv1_13*x**3*y + pv1_14*x**2*y**2 + pv1_15*x*y**3 + pv1_16*y**4 + \
-        pv1_17*x**5 + pv1_18*x**4*y + pv1_19*x**3*y**2 + pv1_20*x**2*y**3 + pv1_21*x*y**4 + \
-        pv1_22*y**5 + \
-        pv1_24*x**6 + pv1_25*x**5*y + pv1_26*x**4*y**2 + pv1_27*x**3*y**3 + \
-        pv1_28*x**2*y**4 + pv1_29*x*y**5 + pv1_30*y**6 + \
-        pv1_31*x**7 + pv1_32*x**6*y + pv1_33*x**5*y**2 + pv1_34*x**4*y**3 + \
-        pv1_35*x**3*y**4 + pv1_36*x**2*y**5 + pv1_37*x*y**6 + pv1_38*y**7
+    tpvx = pv1[0] + pv1[1]*x + pv1[2]*y + pv1[4]*x**2 + pv1[5]*x*y + pv1[6]*y**2 + \
+        pv1[7]*x**3 + pv1[8]*x**2*y + pv1[9]*x*y**2 + pv1[10]*y**3 +  \
+        pv1[12]*x**4 + pv1[13]*x**3*y + pv1[14]*x**2*y**2 + pv1[15]*x*y**3 + pv1[16]*y**4 + \
+        pv1[17]*x**5 + pv1[18]*x**4*y + pv1[19]*x**3*y**2 + pv1[20]*x**2*y**3 + pv1[21]*x*y**4 + \
+        pv1[22]*y**5 + \
+        pv1[24]*x**6 + pv1[25]*x**5*y + pv1[26]*x**4*y**2 + pv1[27]*x**3*y**3 + \
+        pv1[28]*x**2*y**4 + pv1[29]*x*y**5 + pv1[30]*y**6 + \
+        pv1[31]*x**7 + pv1[32]*x**6*y + pv1[33]*x**5*y**2 + pv1[34]*x**4*y**3 + \
+        pv1[35]*x**3*y**4 + pv1[36]*x**2*y**5 + pv1[37]*x*y**6 + pv1[38]*y**7
     tpvx = tpvx.expand()
 
-    tpvy = pv2_0 + pv2_1*y + pv2_2*x + pv2_4*y**2 + pv2_5*y*x + pv2_6*x**2 + \
-        pv2_7*y**3 + pv2_8*y**2*x + pv2_9*y*x**2 + pv2_10*x**3 + \
-        pv2_12*y**4 + pv2_13*y**3*x + pv2_14*y**2*x**2 + pv2_15*y*x**3 + pv2_16*x**4 + \
-        pv2_17*y**5 + pv2_18*y**4*x + pv2_19*y**3*x**2 + pv2_20*y**2*x**3 + pv2_21*y*x**4 + \
-        pv2_22*x**5 + \
-        pv2_24*y**6 + pv2_25*y**5*x + pv2_26*y**4*x**2 + pv2_27*y**3*x**3 + \
-        pv2_28*y**2*x**4 + pv2_29*y*x**5 + pv2_30*x**6 + \
-        pv2_31*y**7 + pv2_32*y**6*x + pv2_33*y**5*x**2 + pv2_34*y**4*x**3 + \
-        pv2_35*y**3*x**4 + pv2_36*y**2*x**5 + pv2_37*y*x**6 + pv2_38*x**7
+    tpvy = pv2[0] + pv2[1]*y + pv2[2]*x + pv2[4]*y**2 + pv2[5]*y*x + pv2[6]*x**2 + \
+        pv2[7]*y**3 + pv2[8]*y**2*x + pv2[9]*y*x**2 + pv2[10]*x**3 + \
+        pv2[12]*y**4 + pv2[13]*y**3*x + pv2[14]*y**2*x**2 + pv2[15]*y*x**3 + pv2[16]*x**4 + \
+        pv2[17]*y**5 + pv2[18]*y**4*x + pv2[19]*y**3*x**2 + pv2[20]*y**2*x**3 + pv2[21]*y*x**4 + \
+        pv2[22]*x**5 + \
+        pv2[24]*y**6 + pv2[25]*y**5*x + pv2[26]*y**4*x**2 + pv2[27]*y**3*x**3 + \
+        pv2[28]*y**2*x**4 + pv2[29]*y*x**5 + pv2[30]*x**6 + \
+        pv2[31]*y**7 + pv2[32]*y**6*x + pv2[33]*y**5*x**2 + pv2[34]*y**4*x**3 + \
+        pv2[35]*y**3*x**4 + pv2[36]*y**2*x**5 + pv2[37]*y*x**6 + pv2[38]*x**7
     tpvy = tpvy.expand()
     return(pvrange, tpvx, tpvy)
 
@@ -107,10 +107,10 @@ def calcpv(pvinx1, pvinx2, sipx, sipy, tpvx, tpvy):
         expr1 = tpvy
         expr2 = sipy
     else:
-        raise Valuerror, 'incorrect first index to PV keywords'
+        raise Valuerror('incorrect first index to PV keywords')
     if (pvinx2 not in pvrange):
-        raise ValueError, 'incorrect second index to PV keywords'
-    exec("pvar = 'pv%d_%d'"%(pvinx1, pvinx2))
+        raise ValueError('incorrect second index to PV keywords')
+    pvar = symbols('pv%d_%d'%(pvinx1, pvinx2))
     xord = yord = 0
     if expr1.coeff(pvar).has(x): xord = poly(expr1.coeff(pvar)).degree(x)
     if expr1.coeff(pvar).has(y): yord = poly(expr1.coeff(pvar)).degree(y)
