@@ -30,16 +30,15 @@ Contact: David Shupe, IPAC/Caltech.
 
 """
 
-version = 1.0
+version = 1.1
 
-from sympy import symbols, Matrix, collect, simplify, poly
-from sympy.tensor import IndexedBase, Idx
+import os
+from sympy import symbols, Matrix, poly
 import numpy as np
 import astropy.io.fits as pyfits
-from collections import OrderedDict
-import os
 
-def calc_tpvexprs():
+
+def sym_tpvexprs():
     """ calculate the Sympy expression for TPV distortion
 
     Parameters:
@@ -52,17 +51,22 @@ def calc_tpvexprs():
     tpvx (Sympy expr) : equation for x-distortion in TPV convention
     tpvy (Sympy expr) : equation for y-distortion in TPV convention
     """
-    x, y = symbols("x y")
     pvrange = list(range(0,39))
     pvrange.remove(3)
     pvrange.remove(11)
     pvrange.remove(23)
     pv1 = symbols('pv1_0:39')
     pv2 = symbols('pv2_0:39')
+    x, y = symbols("x y")
+    tpvx, tpvy = compute_tpv(pv1, pv2, x, y)
+    tpvx.expand()
+    tpvy.expand()
+    return(pvrange, tpvx, tpvy)
 
+
+def compute_tpv(pv1, pv2, x, y):
     # Copy the equations from the PV-to-SIP paper and convert to code,
     #  leaving out radial terms PV[1,3], PV[1,11], PV[1,23], PV[1,39]
-
     tpvx = pv1[0] + pv1[1]*x + pv1[2]*y + pv1[4]*x**2 + pv1[5]*x*y + pv1[6]*y**2 + \
         pv1[7]*x**3 + pv1[8]*x**2*y + pv1[9]*x*y**2 + pv1[10]*y**3 +  \
         pv1[12]*x**4 + pv1[13]*x**3*y + pv1[14]*x**2*y**2 + pv1[15]*x*y**3 + pv1[16]*y**4 + \
@@ -72,7 +76,6 @@ def calc_tpvexprs():
         pv1[28]*x**2*y**4 + pv1[29]*x*y**5 + pv1[30]*y**6 + \
         pv1[31]*x**7 + pv1[32]*x**6*y + pv1[33]*x**5*y**2 + pv1[34]*x**4*y**3 + \
         pv1[35]*x**3*y**4 + pv1[36]*x**2*y**5 + pv1[37]*x*y**6 + pv1[38]*y**7
-    tpvx = tpvx.expand()
 
     tpvy = pv2[0] + pv2[1]*y + pv2[2]*x + pv2[4]*y**2 + pv2[5]*y*x + pv2[6]*x**2 + \
         pv2[7]*y**3 + pv2[8]*y**2*x + pv2[9]*y*x**2 + pv2[10]*x**3 + \
@@ -83,8 +86,36 @@ def calc_tpvexprs():
         pv2[28]*y**2*x**4 + pv2[29]*y*x**5 + pv2[30]*x**6 + \
         pv2[31]*y**7 + pv2[32]*y**6*x + pv2[33]*y**5*x**2 + pv2[34]*y**4*x**3 + \
         pv2[35]*y**3*x**4 + pv2[36]*y**2*x**5 + pv2[37]*y*x**6 + pv2[38]*x**7
-    tpvy = tpvy.expand()
-    return(pvrange, tpvx, tpvy)
+
+    return(tpvx, tpvy)
+
+
+def sym_sipexprs():
+    """ calculate the Sympy expression for SIP distortion
+
+    Parameters:
+    -----------
+    None
+
+    Returns:
+    --------
+    sipu (Sympy expr) : equation for u-distortion in TPV convention
+    sipv (Sympy expr) : equation for v-distortion in TPV convention
+    """
+    u, v = symbols('u v')
+
+    sipu = 0
+    sipv = 0
+    for m in range(8):
+        for n in range(0,8-m):
+            ac = symbols('a_%d_%d'%(m,n))
+            bc = symbols('b_%d_%d'%(m,n))
+            sipu += ac*u**m*v**n
+            sipv += bc*u**m*v**n
+    sipu.expand()
+    sipv.expand()
+    return(sipu, sipv)
+
 
 def calcpv(pvrange,pvinx1, pvinx2, sipx, sipy, tpvx, tpvy):
     """Calculate the PV coefficient expression as a function of CD matrix
@@ -112,7 +143,7 @@ def calcpv(pvrange,pvinx1, pvinx2, sipx, sipy, tpvx, tpvy):
         expr1 = tpvy
         expr2 = sipy
     else:
-        raise Valuerror('incorrect first index to PV keywords')
+        raise ValueError('incorrect first index to PV keywords')
     if (pvinx2 not in pvrange):
         raise ValueError('incorrect second index to PV keywords')
     pvar = symbols('pv%d_%d'%(pvinx1, pvinx2))
@@ -122,9 +153,39 @@ def calcpv(pvrange,pvinx1, pvinx2, sipx, sipy, tpvx, tpvy):
 
     return(expr2.coeff(x,xord).coeff(y,yord))
 
+def calcsip(axis, m, n, sipu, sipv, tpvu, tpvv):
+    """Calculate the SIP coefficient expression as a function of CD matrix
+    parameters and PV coefficients
+
+    Parameters:
+    -----------
+    axis (1 or 2): axis to compute
+    m (int) : order of SIP coefficient in u
+    n (int) : order of SIP coefficient in v
+    sipu (Sympy expr) : symbolic equation for u-distortion in SIP convention
+    sipv (Sympy expr) : symbolic equation for v-distortion in SIP convention
+    tpvu (Sympy expr) : equation for u-distortion w/TPV coeffiecients
+    tpvv (Sympy expr) : equation for v-distortion w/TPV coefficients
+
+    Returns:
+    --------
+    Expression of CD matrix elements and TPV polynomial coefficients
+    """
+    u, v = symbols("u v")
+    if (axis == 1):
+        expr2 = tpvu
+    elif (axis == 2):
+        expr2 = tpvv
+    rval = expr2.coeff(u,m).coeff(v,n)
+    if ((axis == 1) and (m == 1) and (n == 0)):
+        rval = rval - 1.0
+    elif ((axis == 2) and (m == 0) and (n == 1)):
+        rval = rval - 1.0
+    return(rval)
+
 
 def get_sip_keywords(header):
-    """Return the  from a Header object
+    """Return the CD matrix and SIP coefficients from a Header object
 
     Parameters:
     -----------
@@ -136,7 +197,6 @@ def get_sip_keywords(header):
     ac (numpy.matrix) : the A-coefficients from the FITS header
     bc (numpy.matrix) : the B-coefficients from the FITS header
     """
-    dict = OrderedDict()
     cd = np.matrix([[header.get('CD1_1',0.0), header.get('CD1_2',0.0)],
                  [header.get('CD2_1',0.0), header.get('CD2_2',0.0)]], dtype=np.float64)
     ac = np.matrix(np.zeros((8,8), dtype=np.float64))
@@ -148,7 +208,30 @@ def get_sip_keywords(header):
     return(cd, ac, bc)
 
 
-def calc_sipexprs(cd, ac, bc):
+def get_pv_keywords(header):
+    """Return the CD matrix and PV coefficients from a Header object
+
+    Parameters:
+    -----------
+    header (pyfits.Header) : header object from a FITS file
+
+    Returns:
+    --------
+    cd (numpy.matrix) : the CD matrix from the FITS header
+    pv1 (numpy.array) : the PV1-coefficients from the FITS header
+    pv2 (numpy.array) : the PV2-coefficients from the FITS header
+    """
+    cd = np.matrix([[header.get('CD1_1',0.0), header.get('CD1_2',0.0)],
+                 [header.get('CD2_1',0.0), header.get('CD2_2',0.0)]], dtype=np.float64)
+    pv1 = np.zeros((40,), dtype=np.float64)
+    pv2 = np.zeros((40,), dtype=np.float64)
+    for k in range(40):
+            pv1[k] = header.get('PV1_%d'%k, 0.0)
+            pv2[k] = header.get('PV2_%d'%k, 0.0)
+    return(cd, pv1, pv2)
+
+
+def real_sipexprs(cd, ac, bc):
     """ Calculate the Sympy expression for SIP distortion
 
     Parameters:
@@ -164,12 +247,7 @@ def calc_sipexprs(cd, ac, bc):
     """
     x, y = symbols("x y")
     cdinverse = cd**-1
-    invcd11 = cdinverse[0,0]
-    invcd12 = cdinverse[0,1]
-    invcd21 = cdinverse[1,0]
-    invcd22 = cdinverse[1,1]
-    uprime = invcd11*x+invcd12*y
-    vprime = invcd21*x+invcd22*y
+    uprime, vprime = cdinverse*Matrix([x, y])
     usum = uprime
     vsum = vprime
     for m in range(8):
@@ -180,6 +258,31 @@ def calc_sipexprs(cd, ac, bc):
     sipx = sipx.expand()
     sipy = sipy.expand()
     return(sipx, sipy)
+
+
+def real_tpvexprs(cd, pv1, pv2):
+    """ Calculate the Sympy expression for TPV distortion
+
+    Parameters:
+    -----------
+    cd (numpy.matrix) : the CD matrix from the FITS header
+    pv1 (numpy.array) : the axis-1 coefficients from the FITS header
+    pv2 (numpy.array) : the axis-2 coefficients from the FITS header
+
+    Returns:
+    --------
+    tpvu (Sympy expr) : equation for u-distortion in TPV convention
+    tpvv (Sympy expr) : equation for v-distortion in TPV convention
+    """
+    u, v = symbols("u v")
+    x, y = cd*Matrix([u, v])
+
+    tpv1, tpv2 = compute_tpv(pv1, pv2, x, y)
+    cdinverse = cd**-1
+    tpvu, tpvv = cdinverse*Matrix([tpv1, tpv2])
+    tpvu = tpvu.expand()
+    tpvv = tpvv.expand()
+    return(tpvu, tpvv)
 
 
 def add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=True):
@@ -208,6 +311,37 @@ def add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=True):
     else:
         header['CTYPE1'] = header['CTYPE1'][:8]
         header['CTYPE2'] = header['CTYPE2'][:8]
+    return
+
+def add_sip_keywords(header, tpvu, tpvv, sipu, sipv):
+    """Calculate the PV keywords and add to the header
+
+    Parameters:
+    -----------
+    header (pyfits.Header) : header object from a FITS file
+
+
+    Returns:
+    --------
+    None (header is modified in place)
+    """
+    a_order = 0
+    b_order = 0
+    u, v = symbols('u v')
+    for m in range(8):
+        for n in range(8):
+            val = float(calcsip(1,m,n, sipu, sipv, tpvu, tpvv).evalf())
+            if val != 0.0:
+                header['A_%d_%d'%(m,n)] =  val
+                a_order = max(a_order, max(m,n))
+            val = float(calcsip(2,m,n, sipu, sipv, tpvu, tpvv).evalf())
+            if val != 0.0:
+                header['B_%d_%d'%(m,n)] =  val
+                b_order = max(a_order, max(m,n))
+    header['CTYPE1'] = 'RA---TAN-SIP'
+    header['CTYPE2'] = 'DEC--TAN-SIP'
+    header['A_ORDER'] = a_order
+    header['B_ORDER'] = b_order
     return
 
 
@@ -264,16 +398,33 @@ def remove_sip_keywords(header):
     return
 
 
-def sip_to_pv(infile,outfile,tpv_format=True,preserve=False,extension=0,clobber=True):
+def remove_pv_keywords(header):
+    """ Remove keywords from the PV convention from the header.
+
+    Parameters:
+    -----------
+    header (pyfits.Header) : header object from a FITS file
+
+    Returns:
+    --------
+    None (header is modified in place)
+    """
+    for i in range(40):
+        removekwd(header, 'PV1_%d'%i)
+        removekwd(header, 'PV2_%d'%i)
+    return
+
+
+def sip_to_pv(infile,outfile,tpv_format=True,preserve=False,extension=0,overwrite=True):
     """ Function which wraps the sip_to_pv conversion
 
     Parameters:
     -----------
     infile   (string) : name of input FITS file with TAN-SIP projection
     outfile (string) : name of output FITS file with TAN-TPV projection
-    tpv_format (boolean) : modify CTYPE1 and CTYPE2 to TPV convention RA---TPV, DEC--TPV?
-    preserve (boolean) : preserve the SIP keywords in the header (default is to delete)?
-    extension (integer) : extension of FITS file containing SIP header (default 0)?
+    tpv_format (boolean) : modify CTYPE1 and CTYPE2 to TPV convention RA---TPV, DEC--TPV
+    preserve (boolean) : preserve the SIP keywords in the header (default is to delete)
+    extension (integer) : extension of FITS file containing SIP header (default 0)
 
     Returns:
     --------
@@ -281,13 +432,42 @@ def sip_to_pv(infile,outfile,tpv_format=True,preserve=False,extension=0,clobber=
     """
     hdu = pyfits.open(infile)
     header = hdu[extension].header
-    pvrange, tpvx, tpvy = calc_tpvexprs()
+    pvrange, tpvx, tpvy = sym_tpvexprs()
     cd, ac, bc = get_sip_keywords(header)
-    sipx, sipy = calc_sipexprs(cd, ac, bc)
+    sipx, sipy = real_sipexprs(cd, ac, bc)
     add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=tpv_format)
     if (not preserve):
         remove_sip_keywords(header)
-    hdu.writeto(outfile, clobber=clobber)
+    hdu.writeto(outfile, overwrite=overwrite)
+
+    if os.path.exists(outfile):
+      return True
+    else:
+      return False
+
+def pv_to_sip(infile,outfile,preserve=False,extension=0,overwrite=True):
+    """ Function which wraps the sip_to_pv conversion
+
+    Parameters:
+    -----------
+    infile   (string) : name of input FITS file with TAN-SIP projection
+    outfile (string) : name of output FITS file with TAN-TPV projection
+    preserve (boolean) : preserve the PV keywords in the header (default is to delete)
+    extension (integer) : extension of FITS file containing SIP header (default 0)
+
+    Returns:
+    --------
+    True if SIP file has been created, False if not
+    """
+    hdu = pyfits.open(infile)
+    header = hdu[extension].header
+    cd, pv1, pv2 = get_pv_keywords(header)
+    sipu, sipv = sym_sipexprs()
+    tpvu, tpvv = real_tpvexprs(cd, pv1, pv2)
+    add_sip_keywords(header, tpvu, tpvv, sipu, sipv)
+    if (not preserve):
+        remove_pv_keywords(header)
+    hdu.writeto(outfile, overwrite=overwrite)
 
     if os.path.exists(outfile):
       return True
