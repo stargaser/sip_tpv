@@ -36,6 +36,7 @@ import os
 from sympy import symbols, Matrix, poly
 import numpy as np
 import astropy.io.fits as pyfits
+import reverse
 
 
 def sym_tpvexprs():
@@ -340,8 +341,8 @@ def add_sip_keywords(header, tpvu, tpvv, sipu, sipv):
                 b_order = max(a_order, max(m,n))
     header['CTYPE1'] = 'RA---TAN-SIP'
     header['CTYPE2'] = 'DEC--TAN-SIP'
-    header['A_ORDER'] = a_order
-    header['B_ORDER'] = b_order
+    header['A_ORDER'] = int(a_order)
+    header['B_ORDER'] = int(b_order)
     return
 
 
@@ -415,6 +416,29 @@ def remove_pv_keywords(header):
     return
 
 
+def add_reverse_coefficients(header, aporder, bporder):
+    crpix1 = header['CRPIX1']
+    crpix2 = header['CRPIX2']
+    naxis1 = header['NAXIS1']
+    naxis2 = header['NAXIS2']
+    r = np.arange(0, naxis1, 4, dtype=np.float64) - crpix1
+    q = np.arange(0, naxis2, 4, dtype=np.float64) - crpix2
+    u, v = np.meshgrid(r,q)
+    cd, ac, bc = get_sip_keywords(header)
+    adist = np.array(ac)
+    bdist = np.array(bc)
+    apdist,bpdist = reverse.fitreverse(aporder,bporder,adist,bdist, u,v)
+    for i in range(aporder+1):
+        for j in range(aporder+1):
+            if ((i + j) <= aporder) and ((i + j) >= 1):
+                header['AP_%d_%d'%(i,j)] = apdist[i,j]
+    for i in range(bporder+1):
+        for j in range(bporder+1):
+            if ((i + j) <= bporder) and ((i + j) >= 1):
+                header['BP_%d_%d'%(i,j)] = bpdist[i,j]
+    return
+
+
 def sip_to_pv(infile,outfile,tpv_format=True,preserve=False,extension=0,overwrite=True):
     """ Function which wraps the sip_to_pv conversion
 
@@ -435,7 +459,8 @@ def sip_to_pv(infile,outfile,tpv_format=True,preserve=False,extension=0,overwrit
     pvrange, tpvx, tpvy = sym_tpvexprs()
     cd, ac, bc = get_sip_keywords(header)
     sipx, sipy = real_sipexprs(cd, ac, bc)
-    add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=tpv_format)
+    add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, 
+                    int(header['B_ORDER']))
     if (not preserve):
         remove_sip_keywords(header)
     hdu.writeto(outfile, overwrite=overwrite)
