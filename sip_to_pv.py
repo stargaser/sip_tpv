@@ -37,6 +37,7 @@ from sympy import symbols, Matrix, poly
 import numpy as np
 import astropy.io.fits as pyfits
 import reverse
+import pdb
 
 
 def sym_tpvexprs():
@@ -314,7 +315,7 @@ def add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=True):
         header['CTYPE2'] = header['CTYPE2'][:8]
     return
 
-def add_sip_keywords(header, tpvu, tpvv, sipu, sipv):
+def add_sip_keywords(header, tpvu, tpvv, sipu, sipv, add_reverse):
     """Calculate the PV keywords and add to the header
 
     Parameters:
@@ -343,6 +344,8 @@ def add_sip_keywords(header, tpvu, tpvv, sipu, sipv):
     header['CTYPE2'] = 'DEC--TAN-SIP'
     header['A_ORDER'] = int(a_order)
     header['B_ORDER'] = int(b_order)
+    if add_reverse:
+        add_reverse_coefficients(header, a_order + 1, b_order + 1)
     return
 
 
@@ -417,6 +420,7 @@ def remove_pv_keywords(header):
 
 
 def add_reverse_coefficients(header, aporder, bporder):
+    #pdb.set_trace()
     crpix1 = header['CRPIX1']
     crpix2 = header['CRPIX2']
     naxis1 = header['NAXIS1']
@@ -429,13 +433,13 @@ def add_reverse_coefficients(header, aporder, bporder):
     bdist = np.array(bc)
     apdist,bpdist = reverse.fitreverse(aporder,bporder,adist,bdist, u,v)
     for i in range(aporder+1):
-        for j in range(aporder+1):
-            if ((i + j) <= aporder) and ((i + j) >= 1):
+        for j in range(0, aporder - i + 1):
                 header['AP_%d_%d'%(i,j)] = apdist[i,j]
     for i in range(bporder+1):
-        for j in range(bporder+1):
-            if ((i + j) <= bporder) and ((i + j) >= 1):
+        for j in range(0, bporder - i + 1):
                 header['BP_%d_%d'%(i,j)] = bpdist[i,j]
+    header['AP_ORDER'] = aporder
+    header['BP_ORDER'] = bporder
     return
 
 
@@ -470,7 +474,7 @@ def sip_to_pv(infile,outfile,tpv_format=True,preserve=False,extension=0,overwrit
     else:
       return False
 
-def pv_to_sip(infile,outfile,preserve=False,extension=0,overwrite=True):
+def pv_to_sip(infile,outfile,preserve=False,add_reverse=True,extension=0,overwrite=True):
     """ Function which wraps the sip_to_pv conversion
 
     Parameters:
@@ -489,7 +493,7 @@ def pv_to_sip(infile,outfile,preserve=False,extension=0,overwrite=True):
     cd, pv1, pv2 = get_pv_keywords(header)
     sipu, sipv = sym_sipexprs()
     tpvu, tpvv = real_tpvexprs(cd, pv1, pv2)
-    add_sip_keywords(header, tpvu, tpvv, sipu, sipv)
+    add_sip_keywords(header, tpvu, tpvv, sipu, sipv, add_reverse)
     if (not preserve):
         remove_pv_keywords(header)
     hdu.writeto(outfile, overwrite=overwrite)
