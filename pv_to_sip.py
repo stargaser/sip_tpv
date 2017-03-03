@@ -34,33 +34,37 @@ version = 1.1
 
 from copy import copy
 import astropy.io.fits as fits
-from pvsiputils import (sym_tpvexprs,
-                        get_sip_keywords,
-                        real_sipexprs,
-                        add_pv_keywords,
-                        remove_sip_keywords)
+from pvsiputils import(get_pv_keywords,
+                       sym_sipexprs,
+                       real_tpvexprs,
+                       add_sip_keywords,
+                       remove_pv_keywords)
 
-
-def sip_to_pv(header,tpv_format=True,preserve=False):
+def pv_to_sip(header, preserve=False,add_reverse=True,
+              aporder=None, bporder=None):
     """ Function which wraps the sip_to_pv conversion
 
     Parameters:
     -----------
-    header (fits.Header) : header of file with SIP convention keywords
-    tpv_format (boolean) : modify CTYPE1 and CTYPE2 to TPV convention RA---TPV, DEC--TPV
-    preserve (boolean) : preserve the SIP keywords in the header (default is to delete)
+    header (fits.Header) : header of file with TPV convention keywords
+    preserve (boolean) : preserve the PV keywords in the header (default False)
+    add_reverse (boolean) : compute and add reverse SIP keywords (default True)
+    aporder (int) : order for reverse polynomial for axis 1 (default 4)
+    bporder (int) : order for reverse polynomials for axis 2 (default 4)
 
     Returns:
     --------
     None (header is modified in-place)
     """
-    pvrange, tpvx, tpvy = sym_tpvexprs()
-    cd, ac, bc = get_sip_keywords(header)
-    sipx, sipy = real_sipexprs(cd, ac, bc)
-    add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, 
-                    int(header['B_ORDER']))
+    hdu = fits.open(infile)
+    header = hdu[extension].header
+    cd, pv1, pv2 = get_pv_keywords(header)
+    sipu, sipv = sym_sipexprs()
+    tpvu, tpvv = real_tpvexprs(cd, pv1, pv2)
+    add_sip_keywords(header, tpvu, tpvv, sipu, sipv, add_reverse,
+                     aporder, bporder)
     if (not preserve):
-        remove_sip_keywords(header)
+        remove_pv_keywords(header)
 
 
 if __name__ == '__main__':
@@ -70,35 +74,38 @@ if __name__ == '__main__':
         """)
     parser.add_argument('infile', help='path to input file with SIP distortion')
     parser.add_argument('outfile', help='path to output file')
-    parser.add_argument('--extension', help='extension of file with SIP header (default 0)',
+    parser.add_argument('--extension', help='extension of file with PV header (default 0)',
                         default=0)
     parser.add_argument('--overwrite',
                         help='Overwrite output file if it exists',
                         action='store_true')
-    parser.add_argument('--write_tan',
-                        help='Write -TAN in CTYPE keywords, not -TPV',
-                        action='store_true')
-    parser.add_argument('--write_tan_sip',
-                        help='Write -TAN-SIP in CTYPE keywords, not -TPV',
-                        action='store_true')
-    parser.add_argument('--preserve_sip',
+    parser.add_argument('--preserve_tpv',
                         help='Retain SIP keywords in header',
                         action='store_true')
+    parser.add_argument('--add_reverse',
+                        help='Write the reverse SIP coefficients',
+                        action='store_true')
+    parser.add_argument('--aporder',
+                        help='Order for reverse polynomial, axis 1 (defaults to A_ORDER)',
+                        default=None)
+    parser.add_argument('--bporder',
+                        help='Order for reverse polynomial, axis 1 (defaults to B_ORDER)',
+                        default=None)
 
     args = parser.parse_args()
     infile = args.infile
     outfile = args.outfile
     extension = args.extension
     overwrite = args.overwrite
-    write_tan = args.write_tan
-    write_tan_sip = args.write_tan_sip
-    preserve_sip = args.preserve_sip
+    preserve_tpv = args.preserve_tpv
+    add_reverse = args.add_reverse
+    aporder = args.aporder
+    bporder = args.bporder
+
 
     hdu = fits.open(infile)
     header = copy(hdu[extension].header)
-    sip_to_pv(header, tpv_format = not write_tan, preserve = preserve_sip)
-    if write_tan_sip:
-        header['CTYPE1'] = 'RA---TAN-SIP'
-        header['CTYPE2'] = 'DEC--TAN-SIP'
+    pv_to_sip(header, preserve = preserve_tpv, add_reverse=add_reverse,
+              aporder=aporder, bporder=bporder)
     hdu[extension].header = header
     hdu.writeto(outfile, overwrite=overwrite)

@@ -2,13 +2,7 @@
 from __future__ import print_function, division, absolute_import
 # This code determines reverse coefficients from the forward ones
 import numpy as np
-from numba import jit
-from functools import lru_cache
-#import pdb
 
-@lru_cache(maxsize=512)
-def raiseit(a, b):
-    return(np.power(np.array(a),b))
 
 # function to evaluate polynomials
 def evalpoly(u, v, adist, bdist):
@@ -48,6 +42,7 @@ def evalpoly(u, v, adist, bdist):
     uprime = uprime.reshape(myshape)
     vprime = vprime.reshape(myshape)
     return (uprime, vprime)
+
 
 def fitreverse(aporder, bporder, adist, bdist, u, v):
     """ Given the desired reverse polynomials orders,
