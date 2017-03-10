@@ -56,8 +56,6 @@ def pv_to_sip(header, preserve=False,add_reverse=True,
     --------
     None (header is modified in-place)
     """
-    hdu = fits.open(infile)
-    header = hdu[extension].header
     cd, pv1, pv2 = get_pv_keywords(header)
     sipu, sipv = sym_sipexprs()
     tpvu, tpvv = real_tpvexprs(cd, pv1, pv2)
