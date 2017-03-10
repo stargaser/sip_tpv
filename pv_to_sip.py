@@ -78,7 +78,7 @@ if __name__ == '__main__':
                         help='Overwrite output file if it exists',
                         action='store_true')
     parser.add_argument('--preserve_tpv',
-                        help='Retain SIP keywords in header',
+                        help='Retain PV keywords in header',
                         action='store_true')
     parser.add_argument('--add_reverse',
                         help='Write the reverse SIP coefficients',
