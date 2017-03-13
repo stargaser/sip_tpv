@@ -14,7 +14,8 @@ def evalpoly(u, v, adist, bdist):
     # Calculate forward orders from size of distortion matrices
     aorder = np.shape(adist)[0] - 1
     border = np.shape(bdist)[0] - 1
-    myshape = u.shape
+    ushape = u.shape
+    vshape = v.shape
     uu = u.flatten()
     vv = v.flatten()
     uprime = uu.astype('float64')
@@ -22,25 +23,19 @@ def evalpoly(u, v, adist, bdist):
 
     udict = {}
     vdict = {}
-    for i in range(max(aorder,border)+1):
-        udict[i] = np.power(uu,i)
-        vdict[i] = np.power(vv,i)
-    i = aorder
-    while (i >= 0):
-        j = aorder - i
-        while (j >= 0):
+    udict[0] = 1.0
+    vdict[0] = 1.0
+    for i in range(1,max(aorder,border)+1):
+        udict[i] = uu*udict[i-1]
+        vdict[i] = vv*vdict[i-1]
+    for i in range(aorder + 1):
+        for j in range(0, aorder + 1 - i):
             uprime += adist[i][j]*udict[i]*vdict[j]
-            j -= 1
-        i -= 1
-    i = border
-    while (i >= 0):
-        j = border - i
-        while (j >= 0):
+    for i in range(border + 1):
+        for j in range(0, border + 1 - i):
             vprime += bdist[i][j]*udict[i]*vdict[j]
-            j -= 1
-        i -= 1
-    uprime = uprime.reshape(myshape)
-    vprime = vprime.reshape(myshape)
+    uprime = uprime.reshape(ushape)
+    vprime = vprime.reshape(vshape)
     return (uprime, vprime)
 
 
@@ -58,11 +53,15 @@ def fitreverse(aporder, bporder, adist, bdist, u, v):
     (uprime, vprime) = evalpoly(u,v,adist,bdist)
     updict = {}
     vpdict = {}
-    for i in range(max(aporder,bporder)+5):
-        updict[i] = np.power(uprime.flatten(),i)
-        vpdict[i] = np.power(vprime.flatten(),i)
-    udiff = u - uprime
-    vdiff = v - vprime
+    uprime = uprime.flatten()
+    vprime = vprime.flatten()
+    updict[0] = 1.0 + 0.0*uprime
+    vpdict[0] = 1.0 + 0.0*vprime
+    for i in range(1,max(aporder,bporder)+1):
+        updict[i] = updict[i-1]*uprime
+        vpdict[i] = vpdict[i-1]*vprime
+    udiff = u.flatten() - uprime
+    vdiff = v.flatten() - vprime
 
     mylist1 = []
     mylist2 = []
@@ -74,12 +73,12 @@ def fitreverse(aporder, bporder, adist, bdist, u, v):
             mylist2.append(updict[i]*vpdict[j])
 
     A = np.array(mylist1).T
-    B = udiff.flatten()
+    B = udiff
 
     apcoeffs, r, rank, s = np.linalg.lstsq(A, B)
 
     A = np.array(mylist2).T
-    B = vdiff.flatten()
+    B = vdiff
 
     bpcoeffs, r, rank, s = np.linalg.lstsq(A, B)
 
