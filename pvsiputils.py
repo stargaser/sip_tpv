@@ -207,11 +207,15 @@ def get_sip_keywords(header):
     """
     cd = np.matrix([[header.get('CD1_1',0.0), header.get('CD1_2',0.0)],
                  [header.get('CD2_1',0.0), header.get('CD2_2',0.0)]], dtype=np.float64)
-    ac = np.matrix(np.zeros((8,8), dtype=np.float64))
-    bc = np.matrix(np.zeros((8,8), dtype=np.float64))
-    for m in range(8):
-        for n in range(0,8-m):
+    a_order = header.get('A_ORDER', 0.0)
+    b_order = header.get('B_ORDER', 0.0)
+    ac = np.matrix(np.zeros((a_order+1,a_order+1), dtype=np.float64))
+    bc = np.matrix(np.zeros((b_order+1,b_order+1), dtype=np.float64))
+    for m in range(a_order+1):
+        for n in range(0,a_order+1-m):
             ac[m,n] = header.get('A_%d_%d'%(m,n), 0.0)
+    for m in range(b_order+1):
+        for n in range(0,b_order+1-m):
             bc[m,n] = header.get('B_%d_%d'%(m,n), 0.0)
     return(cd, ac, bc)
 
