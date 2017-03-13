@@ -97,8 +97,8 @@ if __name__ == '__main__':
     overwrite = args.overwrite
     preserve_tpv = args.preserve_tpv
     add_reverse = args.add_reverse
-    aporder = args.aporder
-    bporder = args.bporder
+    aporder = int(args.aporder)
+    bporder = int(args.bporder)
 
 
     hdu = fits.open(infile)
