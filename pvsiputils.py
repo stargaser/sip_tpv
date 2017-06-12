@@ -10,7 +10,7 @@ This module includes the equations for converting from the SIP distortion repres
      and http://web.ipac.caltech.edu/staff/shupe/reprints/SIP_to_PV_SPIE2012.pdf .
 The work described in that paper is extended to 7th order.
 
-Copyright (c) 2012-2014, California Institute of Technology
+Copyright (c) 2012-2017, California Institute of Technology
 
 If you make use of this work, please cite:
 "More flexibility in representing geometric distortion in astronomical images,"
@@ -24,7 +24,7 @@ Thanks to Octavi Fors for contributing code modifications for better modularizat
 Funding is acknowledged from NASA to the NASA Herschel Science Center and the
    Spitzer Science Center.
 
-Contact: David Shupe, IPAC/Caltech.
+Contact: David Shupe, Caltech/IPAC.
 
 """
 
@@ -207,8 +207,8 @@ def get_sip_keywords(header):
     """
     cd = np.matrix([[header.get('CD1_1',0.0), header.get('CD1_2',0.0)],
                  [header.get('CD2_1',0.0), header.get('CD2_2',0.0)]], dtype=np.float64)
-    a_order = header.get('A_ORDER', 0.0)
-    b_order = header.get('B_ORDER', 0.0)
+    a_order = int(header.get('A_ORDER', 0))
+    b_order = int(header.get('B_ORDER', 0))
     ac = np.matrix(np.zeros((a_order+1,a_order+1), dtype=np.float64))
     bc = np.matrix(np.zeros((b_order+1,b_order+1), dtype=np.float64))
     for m in range(a_order+1):
@@ -262,9 +262,13 @@ def real_sipexprs(cd, ac, bc):
     uprime, vprime = cdinverse*Matrix([x, y])
     usum = uprime
     vsum = vprime
-    for m in range(8):
-        for n in range(0,8-m):
+    aorder = ac.shape[0] - 1
+    border = bc.shape[0] - 1
+    for m in range(aorder+1):
+        for n in range(0,aorder+1-m):
             usum += ac[m,n]*uprime**m*vprime**n
+    for m in range(border+1):
+        for n in range(0,border+1-m):
             vsum += bc[m,n]*uprime**m*vprime**n
     sipx, sipy = cd*Matrix([usum, vsum])
     sipx = sipx.expand()
@@ -399,10 +403,10 @@ def remove_sip_keywords(header):
     --------
     None (header is modified in place)
     """
-    aorder = header.get('A_ORDER', 0)
-    border = header.get('B_ORDER', 0)
-    aporder = header.get('AP_ORDER', 0)
-    bporder = header.get('BP_ORDER', 0)
+    aorder = int(header.get('A_ORDER', 0))
+    border = int(header.get('B_ORDER', 0))
+    aporder = int(header.get('AP_ORDER', 0))
+    bporder = int(header.get('BP_ORDER', 0))
     for m in range(aorder+1):
         for n in range(0,aorder+1-m):
             removekwd(header,'A_%d_%d'%(m,n))
