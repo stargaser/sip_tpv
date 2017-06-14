@@ -1,4 +1,4 @@
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, division
 
 # Licensed under a 3-clause BSD style license - see LICENSE.txt
 """
@@ -30,7 +30,7 @@ Contact: David Shupe, Caltech/IPAC.
 
 from sympy import symbols, Matrix, poly
 import numpy as np
-from reverse import *
+from sip_tpv import reverse
 
 
 def sym_tpvexprs():
@@ -468,7 +468,7 @@ def add_reverse_coefficients(header, aporder, bporder):
     cd, ac, bc = get_sip_keywords(header)
     adist = np.array(ac)
     bdist = np.array(bc)
-    apdist,bpdist = fitreverse(aporder,bporder,adist,bdist, u,v)
+    apdist,bpdist = reverse.fitreverse(aporder,bporder,adist,bdist, u,v)
     for i in range(aporder+1):
         for j in range(0, aporder - i + 1):
                 header['AP_%d_%d'%(i,j)] = apdist[i,j]
