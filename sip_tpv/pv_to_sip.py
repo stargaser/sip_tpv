@@ -34,7 +34,7 @@ version = 1.1
 
 from copy import copy
 import astropy.io.fits as fits
-from .pvsiputils import(get_pv_keywords,
+from pvsiputils import(get_pv_keywords,
                        sym_sipexprs,
                        real_tpvexprs,
                        add_sip_keywords,
