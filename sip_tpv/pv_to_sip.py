@@ -34,11 +34,12 @@ version = 1.1
 
 from copy import copy
 import astropy.io.fits as fits
-from sip_tpv.pvsiputils import(get_pv_keywords,
-                               sym_sipexprs,
-                               real_tpvexprs,
-                               add_sip_keywords,
-                               remove_pv_keywords)
+from sip_tpv.pvsiputils import (get_pv_keywords,
+                                sym_sipexprs,
+                                real_tpvexprs,
+                                add_sip_keywords,
+                                remove_pv_keywords)
+
 
 def pv_to_sip(header, preserve=False,add_reverse=True,
               aporder=None, bporder=None):
