@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function, division
+from __future__ import print_function, absolute_import, division
 
 # Licensed under a 3-clause BSD style license - see LICENSE.txt
 """
@@ -34,11 +34,11 @@ version = 1.1
 
 from copy import copy
 import astropy.io.fits as fits
-from pvsiputils import (sym_tpvexprs,
-                        get_sip_keywords,
-                        real_sipexprs,
-                        add_pv_keywords,
-                        remove_sip_keywords)
+from .pvsiputils import (sym_tpvexprs,
+                         get_sip_keywords,
+                         real_sipexprs,
+                         add_pv_keywords,
+                         remove_sip_keywords)
 
 
 def sip_to_pv(header,tpv_format=True,preserve=False):

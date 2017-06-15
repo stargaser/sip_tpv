@@ -1,5 +1,5 @@
+from __future__ import print_function
 import pytest
-
 from astropy.io import fits
 from astropy.wcs import WCS
 from sip_tpv.sip_to_pv import sip_to_pv
@@ -45,7 +45,7 @@ def test_pv2sip():
 
     for i, j in map(None, world2, world1):
         for q, k in map(None, i, j):
-            print q, k
+            print(q, k)
             """
             Prints out:
             -25.8095954324 -25.8095954322
