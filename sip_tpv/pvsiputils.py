@@ -30,7 +30,7 @@ Contact: David Shupe, Caltech/IPAC.
 
 from sympy import symbols, Matrix, poly
 import numpy as np
-from sip_tpv import reverse
+import reverse
 
 
 def sym_tpvexprs():

@@ -1,3 +1,5 @@
+import pytest
+
 from astropy.io import fits
 from astropy.wcs import WCS
 from sip_tpv.sip_to_pv import sip_to_pv
