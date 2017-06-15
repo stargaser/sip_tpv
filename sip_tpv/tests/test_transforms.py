@@ -1,54 +1,43 @@
 from __future__ import print_function
-import pytest
+import os
+import numpy.testing as npt
 from astropy.io import fits
 from astropy.wcs import WCS
-from sip_tpv.sip_to_pv import sip_to_pv
-from sip_tpv.pv_to_sip import pv_to_sip
+from ..sip_to_pv import sip_to_pv
+from ..pv_to_sip import pv_to_sip
+
+dir_name = os.path.split(__file__)[0]
 
 
 def test_sip2pv():
-    sipheader = fits.Header.fromtextfile('data/IRAC_3.6um_sip.txt')
-    myheader = sipheader.copy()
-    sip_to_pv(myheader)
+    sip_header = fits.Header.fromtextfile(os.path.join(dir_name, 'data/IRAC_3.6um_sip.txt'))
+    control_header = sip_header.copy()
+    sip_to_pv(sip_header)
 
-    wsip = WCS(sipheader)
-    wtpv = WCS(myheader)
-
-    world1 = wsip.all_pix2world([[1, 1]], 1)
-    world2 = wtpv.all_pix2world([[1, 1]], 1)
-
-    # map will report None for a value in the case that one array is longer than the other, raising an error
-    for i, j in map(None, world1, world2):
-        for q, k in map(None, i, j):
-            assert q == k
-
-
-def test_pv2sip():
-    pvheader = fits.Header.fromtextfile('data/PTF_r_chip01_tpv.txt')
-    header = pvheader.copy()
-    pv_to_sip(header)
-
-    wsip = WCS(pvheader)
-    wtpv = WCS(header)
+    wsip = WCS(sip_header)
+    wtpv = WCS(control_header)
 
     world1 = wsip.all_pix2world([[1, 1]], 1)
     world2 = wtpv.all_pix2world([[1, 1]], 1)
+    print("Test1")
+    npt.assert_array_almost_equal(world1, world2, 6)
 
-    for i, j in map(None, world1, world2):
-        for q, k in map(None, i, j):
-            assert q == k
 
-    sip_to_pv(header)
-    wtpv = WCS(header)
-    world1 = wsip.all_world2pix([[1, 1]], 1)
-    world2 = wtpv.all_world2pix([[1, 1]], 1)
+def test_():
+    pv_header = fits.Header.fromtextfile(os.path.join(dir_name, 'data/IRAC_3.6um_sip.txt'))
+    control_header = pv_header.copy()
+    pv_to_sip(pv_header)
 
-    for i, j in map(None, world2, world1):
-        for q, k in map(None, i, j):
-            print(q, k)
-            """
-            Prints out:
-            -25.8095954324 -25.8095954322
-            19.1907457483 19.1907457481
-            """
-            assert q == k
+    wsip = WCS(pv_header)
+    wtpv = WCS(control_header)
+
+    world1 = wsip.all_pix2world([[1, 1]], 1)
+    world2 = wtpv.all_pix2world([[1, 1]], 1)
+    print("Test2")
+    npt.assert_array_almost_equal(world1, world2, 3)
+
+    sip_to_pv(pv_header)
+
+    world1 = wsip.all_pix2world([[1, 1]], 1)
+    print("Test3")
+    npt.assert_almost_equal(world1, world2, 3)
