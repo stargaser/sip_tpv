@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os
 import numpy.testing as npt
+import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
 from ..sip_to_pv import sip_to_pv
@@ -12,32 +13,36 @@ dir_name = os.path.split(__file__)[0]
 def test_sip2pv():
     sip_header = fits.Header.fromtextfile(os.path.join(dir_name, 'data/IRAC_3.6um_sip.txt'))
     control_header = sip_header.copy()
+    pixarr = np.array([[1, 1], [400, 1], [400, 400], [1, 400]])
+
     sip_to_pv(sip_header)
 
     wsip = WCS(sip_header)
     wtpv = WCS(control_header)
 
-    world1 = wsip.all_pix2world([[1, 1]], 1)
-    world2 = wtpv.all_pix2world([[1, 1]], 1)
+    world1 = wsip.all_pix2world(pixarr, 1)
+    world2 = wtpv.all_pix2world(pixarr, 1)
     print("Test1")
-    npt.assert_array_almost_equal(world1, world2, 6)
+    npt.assert_equal(world1, world2)
 
 
-def test_():
-    pv_header = fits.Header.fromtextfile(os.path.join(dir_name, 'data/IRAC_3.6um_sip.txt'))
+def test_pv2sip():
+    pv_header = fits.Header.fromtextfile(os.path.join(dir_name, 'data/PTF_r_chip01_tpv.txt'))
     control_header = pv_header.copy()
+    pixarr = np.array([[1, 1], [400, 1], [400, 400], [1, 400]])
+
     pv_to_sip(pv_header)
 
     wsip = WCS(pv_header)
     wtpv = WCS(control_header)
 
-    world1 = wsip.all_pix2world([[1, 1]], 1)
-    world2 = wtpv.all_pix2world([[1, 1]], 1)
+    world1 = wsip.all_pix2world(pixarr, 1)
+    world2 = wtpv.all_pix2world(pixarr, 1)
     print("Test2")
-    npt.assert_array_almost_equal(world1, world2, 3)
+    npt.assert_equal(world1, world2)
 
     sip_to_pv(pv_header)
+    world1 = wsip.all_pix2world(pixarr, 1)
 
-    world1 = wsip.all_pix2world([[1, 1]], 1)
     print("Test3")
-    npt.assert_almost_equal(world1, world2, 3)
+    npt.assert_equal(world1, world2)
