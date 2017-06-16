@@ -15,15 +15,18 @@ def test_sip2pv():
     control_header = sip_header.copy()
     naxis1 = sip_header['NAXIS1']
     naxis2 = sip_header['NAXIS2']
-    pixarr = np.array([[1, 1], [naxis1, 1], [naxis1, naxis2], [1, naxis2]])
+    x = np.linspace(1, naxis1, 10)
+    y = np.linspace(1, naxis2, 10)
+    xx, yy = np.meshgrid(x, y)
+    pixargs = np.vstack([xx.reshape(-1), yy.reshape(-1)]).T
 
     sip_to_pv(sip_header)
 
     wsip = WCS(sip_header)
     wtpv = WCS(control_header)
 
-    world1 = wsip.all_pix2world(pixarr, 1)
-    world2 = wtpv.all_pix2world(pixarr, 1)
+    world1 = wsip.all_pix2world(pixargs, 1)
+    world2 = wtpv.all_pix2world(pixargs, 1)
     print("Test1")
     npt.assert_equal(world1, world2)
 
@@ -33,20 +36,23 @@ def test_pv2sip():
     control_header = pv_header.copy()
     naxis1 = pv_header['NAXIS1']
     naxis2 = pv_header['NAXIS2']
-    pixarr = np.array([[1, 1], [naxis1, 1], [naxis1, naxis2], [1, naxis2]])
+    x = np.linspace(1, naxis1, 10)
+    y = np.linspace(1, naxis2, 10)
+    xx, yy = np.meshgrid(x, y)
+    pixargs = np.vstack([xx.reshape(-1), yy.reshape(-1)]).T
 
     pv_to_sip(pv_header)
 
     wsip = WCS(pv_header)
     wtpv = WCS(control_header)
 
-    world1 = wsip.all_pix2world(pixarr, 1)
-    world2 = wtpv.all_pix2world(pixarr, 1)
+    world1 = wsip.all_pix2world(pixargs, 1)
+    world2 = wtpv.all_pix2world(pixargs, 1)
     print("Test2")
     npt.assert_equal(world1, world2)
 
     sip_to_pv(pv_header)
-    world1 = wsip.all_pix2world(pixarr, 1)
+    world1 = wsip.all_pix2world(pixargs, 1)
 
     print("Test3")
     npt.assert_equal(world1, world2)
