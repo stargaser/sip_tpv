@@ -13,7 +13,9 @@ dir_name = os.path.split(__file__)[0]
 def test_sip2pv():
     sip_header = fits.Header.fromtextfile(os.path.join(dir_name, 'data/IRAC_3.6um_sip.txt'))
     control_header = sip_header.copy()
-    pixarr = np.array([[1, 1], [400, 1], [400, 400], [1, 400]])
+    naxis1 = sip_header['NAXIS1']
+    naxis2 = sip_header['NAXIS2']
+    pixarr = np.array([[1, 1], [naxis1, 1], [naxis1, naxis2], [1, naxis2]])
 
     sip_to_pv(sip_header)
 
@@ -29,7 +31,9 @@ def test_sip2pv():
 def test_pv2sip():
     pv_header = fits.Header.fromtextfile(os.path.join(dir_name, 'data/PTF_r_chip01_tpv.txt'))
     control_header = pv_header.copy()
-    pixarr = np.array([[1, 1], [400, 1], [400, 400], [1, 400]])
+    naxis1 = pv_header['NAXIS1']
+    naxis2 = pv_header['NAXIS2']
+    pixarr = np.array([[1, 1], [naxis1, 1], [naxis1, naxis2], [1, naxis2]])
 
     pv_to_sip(pv_header)
 
