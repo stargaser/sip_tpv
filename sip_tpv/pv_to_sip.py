@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
 from __future__ import print_function, absolute_import, division
+from copy import copy
+import astropy.io.fits as fits
+from .pvsiputils import (get_pv_keywords,
+                         sym_sipexprs,
+                         real_tpvexprs,
+                         add_sip_keywords,
+                         remove_pv_keywords)
 
 # Licensed under a 3-clause BSD style license - see LICENSE.txt
 """
@@ -32,16 +39,8 @@ Contact: David Shupe, Caltech/IPAC.
 
 version = 1.1
 
-from copy import copy
-import astropy.io.fits as fits
-from .pvsiputils import (get_pv_keywords,
-                         sym_sipexprs,
-                         real_tpvexprs,
-                         add_sip_keywords,
-                         remove_pv_keywords)
 
-
-def pv_to_sip(header, preserve=False,add_reverse=True,
+def pv_to_sip(header, preserve=False, add_reverse=True,
               aporder=None, bporder=None):
     """ Function which wraps the sip_to_pv conversion
 
@@ -62,12 +61,13 @@ def pv_to_sip(header, preserve=False,add_reverse=True,
     tpvu, tpvv = real_tpvexprs(cd, pv1, pv2)
     add_sip_keywords(header, tpvu, tpvv, sipu, sipv, add_reverse,
                      aporder, bporder)
-    if (not preserve):
+    if not preserve:
         remove_pv_keywords(header)
 
 
 if __name__ == '__main__':
     import argparse
+
     parser = argparse.ArgumentParser(description="""
         Convert FITS files with SIP distortion to TPV representation
         """)
@@ -105,10 +105,9 @@ if __name__ == '__main__':
     if bporder is not None:
         bporder = int(bporder)
 
-
     hdu = fits.open(infile)
     header = copy(hdu[extension].header)
-    pv_to_sip(header, preserve = preserve_tpv, add_reverse=add_reverse,
+    pv_to_sip(header, preserve=preserve_tpv, add_reverse=add_reverse,
               aporder=aporder, bporder=bporder)
     hdu[extension].header = header
     hdu.writeto(outfile, overwrite=overwrite)
