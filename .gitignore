@@ -1,1 +1,4 @@
 *.pyc
+
+# Pycharm editor project files
+.idea

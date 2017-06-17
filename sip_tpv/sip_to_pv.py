@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
 from __future__ import print_function, absolute_import, division
+from copy import copy
+import astropy.io.fits as fits
+from .pvsiputils import (sym_tpvexprs,
+                         get_sip_keywords,
+                         real_sipexprs,
+                         add_pv_keywords,
+                         remove_sip_keywords)
 
 # Licensed under a 3-clause BSD style license - see LICENSE.txt
 """
@@ -32,16 +39,8 @@ Contact: David Shupe, Caltech/IPAC.
 
 version = 1.1
 
-from copy import copy
-import astropy.io.fits as fits
-from pvsiputils import (sym_tpvexprs,
-                        get_sip_keywords,
-                        real_sipexprs,
-                        add_pv_keywords,
-                        remove_sip_keywords)
 
-
-def sip_to_pv(header,tpv_format=True,preserve=False):
+def sip_to_pv(header, tpv_format=True, preserve=False):
     """ Function which wraps the sip_to_pv conversion
 
     Parameters:
@@ -57,14 +56,15 @@ def sip_to_pv(header,tpv_format=True,preserve=False):
     pvrange, tpvx, tpvy = sym_tpvexprs()
     cd, ac, bc = get_sip_keywords(header)
     sipx, sipy = real_sipexprs(cd, ac, bc)
-    add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, 
+    add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy,
                     int(header['B_ORDER']))
-    if (not preserve):
+    if not preserve:
         remove_sip_keywords(header)
 
 
 if __name__ == '__main__':
     import argparse
+
     parser = argparse.ArgumentParser(description="""
         Convert FITS files with SIP distortion to TPV representation
         """)
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     hdu = fits.open(infile)
     header = copy(hdu[extension].header)
-    sip_to_pv(header, tpv_format = not write_tan, preserve = preserve_sip)
+    sip_to_pv(header, tpv_format=not write_tan, preserve=preserve_sip)
     if write_tan_sip:
         header['CTYPE1'] = 'RA---TAN-SIP'
         header['CTYPE2'] = 'DEC--TAN-SIP'

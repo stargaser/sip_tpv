@@ -30,7 +30,7 @@ Contact: David Shupe, Caltech/IPAC.
 
 from sympy import symbols, Matrix, poly
 import numpy as np
-import reverse
+from .reverse import fitreverse
 
 
 def sym_tpvexprs():
@@ -46,7 +46,7 @@ def sym_tpvexprs():
     tpvx (Sympy expr) : equation for x-distortion in TPV convention
     tpvy (Sympy expr) : equation for y-distortion in TPV convention
     """
-    pvrange = list(range(0,39))
+    pvrange = list(range(0, 39))
     pvrange.remove(3)
     pvrange.remove(11)
     pvrange.remove(23)
@@ -56,7 +56,7 @@ def sym_tpvexprs():
     tpvx, tpvy = compute_tpv(pv1, pv2, x, y)
     tpvx.expand()
     tpvy.expand()
-    return(pvrange, tpvx, tpvy)
+    return pvrange, tpvx, tpvy
 
 
 def compute_tpv(pv1, pv2, x, y):
@@ -95,7 +95,7 @@ def compute_tpv(pv1, pv2, x, y):
         pv2[31]*y**7 + pv2[32]*y**6*x + pv2[33]*y**5*x**2 + pv2[34]*y**4*x**3 + \
         pv2[35]*y**3*x**4 + pv2[36]*y**2*x**5 + pv2[37]*y*x**6 + pv2[38]*x**7
 
-    return(tpvx, tpvy)
+    return tpvx, tpvy
 
 
 def sym_sipexprs():
@@ -115,17 +115,17 @@ def sym_sipexprs():
     sipu = 0
     sipv = 0
     for m in range(8):
-        for n in range(0,8-m):
-            ac = symbols('a_%d_%d'%(m,n))
-            bc = symbols('b_%d_%d'%(m,n))
+        for n in range(0, 8-m):
+            ac = symbols('a_%d_%d' % (m, n))
+            bc = symbols('b_%d_%d' % (m, n))
             sipu += ac*u**m*v**n
             sipv += bc*u**m*v**n
     sipu.expand()
     sipv.expand()
-    return(sipu, sipv)
+    return sipu, sipv
 
 
-def calcpv(pvrange,pvinx1, pvinx2, sipx, sipy, tpvx, tpvy):
+def calcpv(pvrange, pvinx1, pvinx2, sipx, sipy, tpvx, tpvy):
     """Calculate the PV coefficient expression as a function of CD matrix
     parameters and SIP coefficients
 
@@ -144,22 +144,25 @@ def calcpv(pvrange,pvinx1, pvinx2, sipx, sipy, tpvx, tpvy):
     Expression of CD matrix elements and SIP polynomial coefficients
     """
     x, y = symbols("x y")
-    if (pvinx1 == 1):
+    if pvinx1 == 1:
         expr1 = tpvx
         expr2 = sipx
-    elif (pvinx1 == 2):
+    elif pvinx1 == 2:
         expr1 = tpvy
         expr2 = sipy
     else:
         raise ValueError('incorrect first index to PV keywords')
-    if (pvinx2 not in pvrange):
+    if pvinx2 not in pvrange:
         raise ValueError('incorrect second index to PV keywords')
-    pvar = symbols('pv%d_%d'%(pvinx1, pvinx2))
+    pvar = symbols('pv%d_%d' % (pvinx1, pvinx2))
     xord = yord = 0
-    if expr1.coeff(pvar).has(x): xord = poly(expr1.coeff(pvar)).degree(x)
-    if expr1.coeff(pvar).has(y): yord = poly(expr1.coeff(pvar)).degree(y)
+    if expr1.coeff(pvar).has(x):
+        xord = poly(expr1.coeff(pvar)).degree(x)
+    if expr1.coeff(pvar).has(y):
+        yord = poly(expr1.coeff(pvar)).degree(y)
 
-    return(expr2.coeff(x,xord).coeff(y,yord))
+    return expr2.coeff(x, xord).coeff(y, yord)
+
 
 def calcsip(axis, m, n, sipu, sipv, tpvu, tpvv):
     """Calculate the SIP coefficient expression as a function of CD matrix
@@ -180,16 +183,16 @@ def calcsip(axis, m, n, sipu, sipv, tpvu, tpvv):
     Expression of CD matrix elements and TPV polynomial coefficients
     """
     u, v = symbols("u v")
-    if (axis == 1):
+    if axis == 1:
         expr2 = tpvu
-    elif (axis == 2):
+    elif axis == 2:
         expr2 = tpvv
-    rval = expr2.coeff(u,m).coeff(v,n)
-    if ((axis == 1) and (m == 1) and (n == 0)):
+    rval = expr2.coeff(u, m).coeff(v, n)
+    if (axis == 1) and (m == 1) and (n == 0):
         rval = rval - 1.0
-    elif ((axis == 2) and (m == 0) and (n == 1)):
+    elif (axis == 2) and (m == 0) and (n == 1):
         rval = rval - 1.0
-    return(rval)
+    return rval
 
 
 def get_sip_keywords(header):
@@ -205,19 +208,19 @@ def get_sip_keywords(header):
     ac (numpy.matrix) : the A-coefficients from the FITS header
     bc (numpy.matrix) : the B-coefficients from the FITS header
     """
-    cd = np.matrix([[header.get('CD1_1',0.0), header.get('CD1_2',0.0)],
-                 [header.get('CD2_1',0.0), header.get('CD2_2',0.0)]], dtype=np.float64)
+    cd = np.matrix([[header.get('CD1_1', 0.0), header.get('CD1_2', 0.0)],
+                    [header.get('CD2_1', 0.0), header.get('CD2_2', 0.0)]], dtype=np.float64)
     a_order = int(header.get('A_ORDER', 0))
     b_order = int(header.get('B_ORDER', 0))
-    ac = np.matrix(np.zeros((a_order+1,a_order+1), dtype=np.float64))
-    bc = np.matrix(np.zeros((b_order+1,b_order+1), dtype=np.float64))
+    ac = np.matrix(np.zeros((a_order+1, a_order+1), dtype=np.float64))
+    bc = np.matrix(np.zeros((b_order+1, b_order+1), dtype=np.float64))
     for m in range(a_order+1):
-        for n in range(0,a_order+1-m):
-            ac[m,n] = header.get('A_%d_%d'%(m,n), 0.0)
+        for n in range(0, a_order+1-m):
+            ac[m, n] = header.get('A_%d_%d' % (m, n), 0.0)
     for m in range(b_order+1):
-        for n in range(0,b_order+1-m):
-            bc[m,n] = header.get('B_%d_%d'%(m,n), 0.0)
-    return(cd, ac, bc)
+        for n in range(0, b_order+1-m):
+            bc[m, n] = header.get('B_%d_%d' % (m, n), 0.0)
+    return cd, ac, bc
 
 
 def get_pv_keywords(header):
@@ -233,14 +236,14 @@ def get_pv_keywords(header):
     pv1 (numpy.array) : the PV1-coefficients from the FITS header
     pv2 (numpy.array) : the PV2-coefficients from the FITS header
     """
-    cd = np.matrix([[header.get('CD1_1',0.0), header.get('CD1_2',0.0)],
-                 [header.get('CD2_1',0.0), header.get('CD2_2',0.0)]], dtype=np.float64)
+    cd = np.matrix([[header.get('CD1_1', 0.0), header.get('CD1_2', 0.0)],
+                    [header.get('CD2_1', 0.0), header.get('CD2_2', 0.0)]], dtype=np.float64)
     pv1 = np.zeros((40,), dtype=np.float64)
     pv2 = np.zeros((40,), dtype=np.float64)
     for k in range(40):
-            pv1[k] = header.get('PV1_%d'%k, 0.0)
-            pv2[k] = header.get('PV2_%d'%k, 0.0)
-    return(cd, pv1, pv2)
+            pv1[k] = header.get('PV1_%d' % k, 0.0)
+            pv2[k] = header.get('PV2_%d' % k, 0.0)
+    return cd, pv1, pv2
 
 
 def real_sipexprs(cd, ac, bc):
@@ -265,15 +268,15 @@ def real_sipexprs(cd, ac, bc):
     aorder = ac.shape[0] - 1
     border = bc.shape[0] - 1
     for m in range(aorder+1):
-        for n in range(0,aorder+1-m):
-            usum += ac[m,n]*uprime**m*vprime**n
+        for n in range(0, aorder+1-m):
+            usum += ac[m, n]*uprime**m*vprime**n
     for m in range(border+1):
-        for n in range(0,border+1-m):
-            vsum += bc[m,n]*uprime**m*vprime**n
+        for n in range(0, border+1-m):
+            vsum += bc[m, n]*uprime**m*vprime**n
     sipx, sipy = cd*Matrix([usum, vsum])
     sipx = sipx.expand()
     sipy = sipy.expand()
-    return(sipx, sipy)
+    return sipx, sipy
 
 
 def real_tpvexprs(cd, pv1, pv2):
@@ -298,7 +301,7 @@ def real_tpvexprs(cd, pv1, pv2):
     tpvu, tpvv = cdinverse*Matrix([tpv1, tpv2])
     tpvu = tpvu.expand()
     tpvv = tpvv.expand()
-    return(tpvu, tpvv)
+    return tpvu, tpvv
 
 
 def add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=True):
@@ -317,13 +320,13 @@ def add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=True):
     None (header is modified in place)
     """
     for p in pvrange:
-        val = float(calcpv(pvrange,1,p,sipx,sipy, tpvx, tpvy).evalf())
+        val = float(calcpv(pvrange, 1, p, sipx, sipy, tpvx, tpvy).evalf())
         if val != 0.0:
-            header['PV1_%d'%p] =  val
+            header['PV1_%d' % p] = val
     for p in pvrange:
-        val = float(calcpv(pvrange,2,p,sipx,sipy, tpvx, tpvy).evalf())
+        val = float(calcpv(pvrange, 2, p, sipx, sipy, tpvx, tpvy).evalf())
         if val != 0.0:
-            header['PV2_%d'%p] = val
+            header['PV2_%d' % p] = val
     if tpv:
         header['CTYPE1'] = 'RA---TPV'
         header['CTYPE2'] = 'DEC--TPV'
@@ -331,6 +334,7 @@ def add_pv_keywords(header, sipx, sipy, pvrange, tpvx, tpvy, tpv=True):
         header['CTYPE1'] = header['CTYPE1'][:8]
         header['CTYPE2'] = header['CTYPE2'][:8]
     return
+
 
 def add_sip_keywords(header, tpvu, tpvv, sipu, sipv, add_reverse=True,
                      aporder=None, bporder=None):
@@ -354,14 +358,14 @@ def add_sip_keywords(header, tpvu, tpvv, sipu, sipv, add_reverse=True,
     u, v = symbols('u v')
     for m in range(8):
         for n in range(8):
-            val = float(calcsip(1,m,n, sipu, sipv, tpvu, tpvv).evalf())
+            val = float(calcsip(1, m, n, sipu, sipv, tpvu, tpvv).evalf())
             if val != 0.0:
-                header['A_%d_%d'%(m,n)] =  val
-                a_order = max(a_order, max(m,n))
-            val = float(calcsip(2,m,n, sipu, sipv, tpvu, tpvv).evalf())
+                header['A_%d_%d' % (m, n)] = val
+                a_order = max(a_order, max(m, n))
+            val = float(calcsip(2, m, n, sipu, sipv, tpvu, tpvv).evalf())
             if val != 0.0:
-                header['B_%d_%d'%(m,n)] =  val
-                b_order = max(a_order, max(m,n))
+                header['B_%d_%d' % (m, n)] = val
+                b_order = max(a_order, max(m, n))
     header['CTYPE1'] = 'RA---TAN-SIP'
     header['CTYPE2'] = 'DEC--TAN-SIP'
     header['A_ORDER'] = int(a_order)
@@ -392,6 +396,7 @@ def removekwd(header, kwd):
         header.remove(kwd)
     return
 
+
 def remove_sip_keywords(header):
     """ Remove keywords from the SIP convention from the header.
 
@@ -408,23 +413,23 @@ def remove_sip_keywords(header):
     aporder = int(header.get('AP_ORDER', 0))
     bporder = int(header.get('BP_ORDER', 0))
     for m in range(aorder+1):
-        for n in range(0,aorder+1-m):
-            removekwd(header,'A_%d_%d'%(m,n))
+        for n in range(0, aorder+1-m):
+            removekwd(header, 'A_%d_%d' % (m, n))
     for m in range(border+1):
-        for n in range(0,border+1-m):
-            removekwd(header,'B_%d_%d'%(m,n))
+        for n in range(0, border+1-m):
+            removekwd(header, 'B_%d_%d' % (m, n))
     for m in range(aporder+1):
-        for n in range(0,aporder+1-m):
-            removekwd(header, 'AP_%d_%d'%(m,n))
+        for n in range(0, aporder+1-m):
+            removekwd(header, 'AP_%d_%d' % (m, n))
     for m in range(bporder+1):
-        for n in range(0,bporder+1-m):
-            removekwd(header, 'BP_%d_%d'%(m,n))
+        for n in range(0, bporder+1-m):
+            removekwd(header, 'BP_%d_%d' % (m, n))
     removekwd(header, 'A_ORDER')
     removekwd(header, 'B_ORDER')
-    removekwd(header,'AP_ORDER')
-    removekwd(header,'BP_ORDER')
-    removekwd(header,'A_DMAX')
-    removekwd(header,'B_DMAX')
+    removekwd(header, 'AP_ORDER')
+    removekwd(header, 'BP_ORDER')
+    removekwd(header, 'A_DMAX')
+    removekwd(header, 'B_DMAX')
     return
 
 
@@ -440,8 +445,8 @@ def remove_pv_keywords(header):
     None (header is modified in place)
     """
     for i in range(40):
-        removekwd(header, 'PV1_%d'%i)
-        removekwd(header, 'PV2_%d'%i)
+        removekwd(header, 'PV1_%d' % i)
+        removekwd(header, 'PV2_%d' % i)
     return
 
 
@@ -464,21 +469,17 @@ def add_reverse_coefficients(header, aporder, bporder):
     naxis2 = header['NAXIS2']
     r = np.arange(0, naxis1, 4, dtype=np.float64) - crpix1
     q = np.arange(0, naxis2, 4, dtype=np.float64) - crpix2
-    u, v = np.meshgrid(r,q)
+    u, v = np.meshgrid(r, q)
     cd, ac, bc = get_sip_keywords(header)
     adist = np.array(ac)
     bdist = np.array(bc)
-    apdist,bpdist = reverse.fitreverse(aporder,bporder,adist,bdist, u,v)
+    apdist, bpdist = fitreverse(aporder, bporder, adist, bdist, u, v)
     for i in range(aporder+1):
         for j in range(0, aporder - i + 1):
-                header['AP_%d_%d'%(i,j)] = apdist[i,j]
+                header['AP_%d_%d' % (i, j)] = apdist[i, j]
     for i in range(bporder+1):
         for j in range(0, bporder - i + 1):
-                header['BP_%d_%d'%(i,j)] = bpdist[i,j]
+                header['BP_%d_%d' % (i, j)] = bpdist[i, j]
     header['AP_ORDER'] = aporder
     header['BP_ORDER'] = bporder
     return
-
-
-
-
