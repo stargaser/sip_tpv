@@ -4,6 +4,7 @@ from setuptools import setup
 setup(name='sip_tpv',
       version="1.1",
       description='Conversion of distortion representations in FITS headers between SIP and TPV formats.',
+      long_description=open('README.rst', 'r').open()
       url='https://github.com/stargaser/sip_tpv',
       author='''David Shupe,
              Austin Beauchamp''',
