@@ -32,6 +32,7 @@ from pathlib import Path
 import click
 import astropy.io.fits as fits
 
+from ._cli import EXTENSION, get_hdu
 from .pvsiputils import (
     sym_tpvexprs,
     get_sip_keywords,
@@ -66,20 +67,22 @@ def sip_to_pv(header, tpv_format=True, preserve=False):
 @click.command()
 @click.argument("infile", type=click.Path(path_type=Path, exists=True, dir_okay=False))
 @click.argument("outfile", type=click.Path(path_type=Path, dir_okay=False))
-@click.option("--extension", default=0, type=int,
-              help="Extension of file with SIP header (default 0).")
+@click.option("--extension", default=0, type=EXTENSION,
+              help="Index or EXTNAME of the HDU with the SIP header (default 0).")
 @click.option("--overwrite", is_flag=True,
               help="Overwrite output file if it exists.")
-@click.option("--write-tan", is_flag=True,
+@click.option("--write-tan", "--write_tan", is_flag=True,
               help="Write -TAN in CTYPE keywords, not -TPV.")
-@click.option("--write-tan-sip", is_flag=True,
+@click.option("--write-tan-sip", "--write_tan_sip", is_flag=True,
               help="Write -TAN-SIP in CTYPE keywords, not -TPV.")
-@click.option("--preserve-sip", is_flag=True,
+@click.option("--preserve-sip", "--preserve_sip", is_flag=True,
               help="Retain SIP keywords in header.")
 def cli(infile, outfile, extension, overwrite, write_tan, write_tan_sip, preserve_sip):
     """Convert FITS files with SIP distortion to TPV representation."""
+    if write_tan and write_tan_sip:
+        raise click.UsageError("--write-tan and --write-tan-sip are mutually exclusive.")
     with fits.open(infile) as hdu:
-        header = copy(hdu[extension].header)
+        header = copy(get_hdu(hdu, extension).header)
         sip_to_pv(header, tpv_format=not write_tan, preserve=preserve_sip)
         if write_tan_sip:
             header['CTYPE1'] = 'RA---TAN-SIP'

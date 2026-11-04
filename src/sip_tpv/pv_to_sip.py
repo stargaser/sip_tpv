@@ -32,6 +32,7 @@ from pathlib import Path
 import click
 import astropy.io.fits as fits
 
+from ._cli import EXTENSION, get_hdu
 from .pvsiputils import (
     get_pv_keywords,
     sym_sipexprs,
@@ -69,13 +70,13 @@ def pv_to_sip(header, preserve=False, add_reverse=True,
 @click.command()
 @click.argument("infile", type=click.Path(path_type=Path, exists=True, dir_okay=False))
 @click.argument("outfile", type=click.Path(path_type=Path, dir_okay=False))
-@click.option("--extension", default=0, type=int,
-              help="Extension of file with PV header (default 0).")
+@click.option("--extension", default=0, type=EXTENSION,
+              help="Index or EXTNAME of the HDU with the PV header (default 0).")
 @click.option("--overwrite", is_flag=True,
               help="Overwrite output file if it exists.")
-@click.option("--preserve-tpv", is_flag=True,
+@click.option("--preserve-tpv", "--preserve_tpv", is_flag=True,
               help="Retain PV keywords in header.")
-@click.option("--add-reverse", is_flag=True,
+@click.option("--add-reverse", "--add_reverse", is_flag=True,
               help="Write the reverse SIP coefficients.")
 @click.option("--aporder", default=None, type=int,
               help="Order for reverse polynomial, axis 1 (defaults to A_ORDER).")
@@ -85,7 +86,7 @@ def cli(infile, outfile, extension, overwrite, preserve_tpv, add_reverse,
         aporder, bporder):
     """Convert FITS files with TPV distortion to SIP representation."""
     with fits.open(infile) as hdu:
-        header = copy(hdu[extension].header)
+        header = copy(get_hdu(hdu, extension).header)
         pv_to_sip(header, preserve=preserve_tpv, add_reverse=add_reverse,
                   aporder=aporder, bporder=bporder)
         hdu[extension].header = header
