@@ -2,9 +2,9 @@ from setuptools import setup
 
 
 setup(name='sip_tpv',
-      version="1.1",
+      version="1.2",
       description='Conversion of distortion representations in FITS headers between SIP and TPV formats.',
-      long_description=open('README.rst', 'r').open()
+      long_description=open('README', 'r').read(),
       url='https://github.com/stargaser/sip_tpv',
       author='''David Shupe,
              Austin Beauchamp''',

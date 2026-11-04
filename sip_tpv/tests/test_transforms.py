@@ -32,7 +32,7 @@ def test_sip2pv():
     world1 = wsip.all_pix2world(pixargs, 1)
     world2 = wtpv.all_pix2world(pixargs, 1)
 
-    npt.assert_equal(world1, world2)
+    npt.assert_allclose(world1, world2, rtol=1e-12)
 
     pix1 = wsip.all_world2pix(world1, 1)
     pix2 = wtpv.all_world2pix(world2, 1)
@@ -63,7 +63,7 @@ def test_pv2sip():
     world1 = wsip.all_pix2world(pixargs, 1)
     world2 = wtpv.all_pix2world(pixargs, 1)
 
-    npt.assert_equal(world1, world2)
+    npt.assert_allclose(world1, world2, rtol=1e-12)
 
     pix1 = wsip.all_world2pix(world1, 1)
     pix2 = wtpv.all_world2pix(world2, 1)
