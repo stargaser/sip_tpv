@@ -37,7 +37,7 @@ Contact: David Shupe, Caltech/IPAC.
 
 """
 
-version = 1.1
+version = 1.2
 
 
 def sip_to_pv(header, tpv_format=True, preserve=False):
