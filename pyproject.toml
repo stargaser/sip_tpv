@@ -13,7 +13,7 @@ authors = [
     { name = "David Shupe", email = "shupe@ipac.caltech.edu" },
     { name = "Austin Beauchamp", email = "austinbeauch@gmail.com" }
 ]
-# Minimums are the first releases supporting Python 3.11; the tests pass
+# Minimums are the oldest versions tested: the tests pass on Python 3.11
 # with exactly these versions.
 dependencies = [
     "numpy>=1.23.2",
