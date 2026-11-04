@@ -74,12 +74,12 @@ def fitreverse(aporder, bporder, adist, bdist, u, v):
     a = np.array(mylist1).T
     b = udiff
 
-    apcoeffs, r, rank, s = np.linalg.lstsq(a, b)
+    apcoeffs, r, rank, s = np.linalg.lstsq(a, b, rcond=None)
 
     a = np.array(mylist2).T
     b = vdiff
 
-    bpcoeffs, r, rank, s = np.linalg.lstsq(a, b)
+    bpcoeffs, r, rank, s = np.linalg.lstsq(a, b, rcond=None)
 
     # Load reverse distortion matrices
     extractcoeffs(apcoeffs, aporder, apdist)

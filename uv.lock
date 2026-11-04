@@ -313,11 +313,11 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "astropy", specifier = ">=6.0" },
-    { name = "click", specifier = ">=8.1" },
-    { name = "numpy", specifier = ">=2.0" },
+    { name = "astropy", specifier = ">=5.2" },
+    { name = "click", specifier = ">=8.0" },
+    { name = "numpy", specifier = ">=1.23.2" },
     { name = "pytest", marker = "extra == 'tests'", specifier = ">=7.0" },
-    { name = "sympy" },
+    { name = "sympy", specifier = ">=1.11" },
 ]
 provides-extras = ["tests"]
 

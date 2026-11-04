@@ -13,11 +13,13 @@ authors = [
     { name = "David Shupe", email = "shupe@ipac.caltech.edu" },
     { name = "Austin Beauchamp", email = "austinbeauch@gmail.com" }
 ]
+# Minimums are the first releases supporting Python 3.11; the tests pass
+# with exactly these versions.
 dependencies = [
-    "numpy>=2.0",
-    "astropy>=6.0",
-    "sympy",
-    "click>=8.1",
+    "numpy>=1.23.2",
+    "astropy>=5.2",
+    "sympy>=1.11",
+    "click>=8.0",
 ]
 
 [project.optional-dependencies]
