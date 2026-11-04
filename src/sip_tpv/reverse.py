@@ -1,14 +1,12 @@
-from __future__ import print_function, division, absolute_import
-# This code determines reverse coefficients from the forward ones
+"""Determine reverse SIP coefficients from the forward ones."""
+
 import numpy as np
 
 
 # function to evaluate polynomials
 def evalpoly(u, v, adist, bdist):
-    """ Given coordinates arrays u, v,
-        polynomial orders aorder and border,
-        and distortion polynomial matrices,
-        return a tuple of (uprime,vprime) containing the corrected positions."""
+    """Given coordinates arrays u, v, and distortion polynomials,
+    return corrected positions."""
 
     # Calculate forward orders from size of distortion matrices
     aorder = np.shape(adist)[0] - 1
@@ -39,11 +37,7 @@ def evalpoly(u, v, adist, bdist):
 
 
 def fitreverse(aporder, bporder, adist, bdist, u, v):
-    """ Given the desired reverse polynomials orders,
-        the forward coefficients, and coordinate arrays
-        u and v for doing the calculations, this function
-        computes reverse coefficients and returns the results
-        in matrices apdist and bpdist """
+    """Compute reverse coefficients and return them in matrices."""
 
     # Create reverse coefficient matrices
     apdist = np.zeros((aporder + 1, aporder + 1), 'float64')
@@ -89,8 +83,7 @@ def fitreverse(aporder, bporder, adist, bdist, u, v):
 
 
 def extractcoeffs(coeffs, order, dist):
-    """ Given a compact vector of coefficients and the
-        polynomial order, extract them into matrix dist """
+    """Given a compact vector of coefficients, extract to matrix."""
     index = 0
     for i in range(order + 1):
         for j in range(0, order - i + 1):

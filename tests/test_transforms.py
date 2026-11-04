@@ -1,21 +1,18 @@
-from __future__ import print_function
-import os
-import numpy.testing as npt
+from pathlib import Path
+
 import numpy as np
+import numpy.testing as npt
 from astropy.io import fits
 from astropy.wcs import WCS
-from ..sip_to_pv import sip_to_pv
-from ..pv_to_sip import pv_to_sip
 
-dir_name = os.path.split(__file__)[0]
+from sip_tpv import pv_to_sip, sip_to_pv
+
+DATA_DIR = Path(__file__).parent / "data"
 
 
 def test_sip2pv():
-    """
-    Test conversion of sip 2 pv keywords, ensure that both provide same ra/dec <--> x/y transforms.
-    """
-
-    sip_header = fits.Header.fromtextfile(os.path.join(dir_name, 'data/IRAC_3.6um_sip.txt'))
+    """Ensure SIP->PV conversion preserves world/pixel transforms."""
+    sip_header = fits.Header.fromtextfile(DATA_DIR / "IRAC_3.6um_sip.txt")
     control_header = sip_header.copy()
     naxis1 = sip_header['NAXIS1']
     naxis2 = sip_header['NAXIS2']
@@ -41,12 +38,8 @@ def test_sip2pv():
 
 
 def test_pv2sip():
-    """
-    Test conversion of pv 2 sip keywords, check to see that world2pix transform round trips and is equal for pv and
-     sip keywords.
-    """
-
-    pv_header = fits.Header.fromtextfile(os.path.join(dir_name, 'data/PTF_r_chip01_tpv.txt'))
+    """Ensure PV->SIP conversion round-trips world/pixel transformations."""
+    pv_header = fits.Header.fromtextfile(DATA_DIR / "PTF_r_chip01_tpv.txt")
     control_header = pv_header.copy()
     naxis1 = pv_header['NAXIS1']
     naxis2 = pv_header['NAXIS2']
