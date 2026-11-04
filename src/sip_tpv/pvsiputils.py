@@ -10,7 +10,7 @@ This module includes the equations for converting from the SIP distortion repres
      and http://web.ipac.caltech.edu/staff/shupe/reprints/SIP_to_PV_SPIE2012.pdf .
 The work described in that paper is extended to 7th order.
 
-Copyright (c) 2012-2017, California Institute of Technology
+Copyright (c) 2012-2026, California Institute of Technology
 
 If you make use of this work, please cite:
 "More flexibility in representing geometric distortion in astronomical images,"
