@@ -1,17 +1,3 @@
-from copy import copy
-from pathlib import Path
-
-import click
-import astropy.io.fits as fits
-
-from .pvsiputils import (
-    get_pv_keywords,
-    sym_sipexprs,
-    real_tpvexprs,
-    add_sip_keywords,
-    remove_pv_keywords,
-)
-
 # Licensed under a 3-clause BSD style license - see LICENSE.txt
 """
 Convert TPV convention distortion keywords to the SIP convention.
@@ -40,12 +26,37 @@ Contact: David Shupe, Caltech/IPAC.
 
 """
 
-version = "2.0"
+from copy import copy
+from pathlib import Path
+
+import click
+import astropy.io.fits as fits
+
+from .pvsiputils import (
+    get_pv_keywords,
+    sym_sipexprs,
+    real_tpvexprs,
+    add_sip_keywords,
+    remove_pv_keywords,
+)
 
 
 def pv_to_sip(header, preserve=False, add_reverse=True,
               aporder=None, bporder=None):
-    """Function which wraps the PV to SIP conversion."""
+    """ Function which wraps the pv_to_sip conversion
+
+    Parameters:
+    -----------
+    header (fits.Header) : header of file with TPV convention keywords
+    preserve (boolean) : preserve the PV keywords in the header (default False)
+    add_reverse (boolean) : compute and add reverse SIP keywords (default True)
+    aporder (int) : order for reverse polynomial for axis 1 (default A_ORDER)
+    bporder (int) : order for reverse polynomial for axis 2 (default B_ORDER)
+
+    Returns:
+    --------
+    None (header is modified in-place)
+    """
     cd, pv1, pv2 = get_pv_keywords(header)
     sipu, sipv = sym_sipexprs()
     tpvu, tpvv = real_tpvexprs(cd, pv1, pv2)

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sip_tpv"
-dynamic = ["version"]
+version = "2.0"
 description = "Conversion of distortion representations in FITS headers between SIP and TPV formats."
 readme = "README"
 requires-python = ">=3.11"
@@ -37,9 +37,6 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.setuptools.dynamic]
-version = { attr = "sip_tpv.__version__" }
 
 [tool.uv]
 dev-dependencies = [

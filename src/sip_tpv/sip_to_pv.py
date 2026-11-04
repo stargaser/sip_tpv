@@ -1,17 +1,3 @@
-from copy import copy
-from pathlib import Path
-
-import click
-import astropy.io.fits as fits
-
-from .pvsiputils import (
-    sym_tpvexprs,
-    get_sip_keywords,
-    real_sipexprs,
-    add_pv_keywords,
-    remove_sip_keywords,
-)
-
 # Licensed under a 3-clause BSD style license - see LICENSE.txt
 """
 Convert SIP convention distortion keywords to the TPV convention.
@@ -40,11 +26,34 @@ Contact: David Shupe, Caltech/IPAC.
 
 """
 
-version = "2.0"
+from copy import copy
+from pathlib import Path
+
+import click
+import astropy.io.fits as fits
+
+from .pvsiputils import (
+    sym_tpvexprs,
+    get_sip_keywords,
+    real_sipexprs,
+    add_pv_keywords,
+    remove_sip_keywords,
+)
 
 
 def sip_to_pv(header, tpv_format=True, preserve=False):
-    """Function which wraps the SIP to PV conversion."""
+    """ Function which wraps the sip_to_pv conversion
+
+    Parameters:
+    -----------
+    header (fits.Header) : header of file with SIP convention keywords
+    tpv_format (boolean) : modify CTYPE1 and CTYPE2 to TPV convention RA---TPV, DEC--TPV
+    preserve (boolean) : preserve the SIP keywords in the header (default is to delete)
+
+    Returns:
+    --------
+    None (header is modified in-place)
+    """
     pvrange, tpvx, tpvy = sym_tpvexprs()
     cd, ac, bc = get_sip_keywords(header)
     sipx, sipy = real_sipexprs(cd, ac, bc)
