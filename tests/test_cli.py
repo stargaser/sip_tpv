@@ -100,6 +100,19 @@ def test_pv_to_sip_cli(tpv_file, tmp_path):
     assert "PV1_1" not in header
 
 
+@pytest.mark.parametrize("args, expected", [
+    ([], True),
+    (["--add-reverse"], True),
+    (["--no-add-reverse"], False),
+    (["--no_add_reverse"], False),
+])
+def test_add_reverse_default_on(tpv_file, tmp_path, args, expected):
+    out = tmp_path / "out.fits"
+    result = run(pv_to_sip_cli, tpv_file, out, *args)
+    assert result.exit_code == 0, result.output
+    assert ("AP_ORDER" in fits.getheader(out, 0)) == expected
+
+
 def test_underscore_option_aliases(tpv_file, tmp_path):
     """The 1.x underscore spellings still work."""
     out = tmp_path / "out.fits"

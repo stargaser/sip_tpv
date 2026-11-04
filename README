@@ -20,11 +20,13 @@ Installing the package also provides ``sip_to_pv`` and ``pv_to_sip`` commands
 that convert the header of one HDU in a FITS file and write a new file::
 
     sip_to_pv input_sip.fits output_tpv.fits
-    pv_to_sip input_tpv.fits output_sip.fits --add-reverse --extension SCI
+    pv_to_sip input_tpv.fits output_sip.fits --extension SCI
 
-``--extension`` takes an HDU index or EXTNAME (default 0). Run either command
-with ``--help`` for all options. The underscore spellings of options used in
-version 1.x (e.g. ``--preserve_sip``) are still accepted.
+``--extension`` takes an HDU index or EXTNAME (default 0). ``pv_to_sip`` also
+computes the reverse SIP coefficients (AP/BP); use ``--no-add-reverse`` to skip
+them. Run either command with ``--help`` for all options. The underscore
+spellings of options used in version 1.x (e.g. ``--preserve_sip``) are still
+accepted.
 
 License
 =======

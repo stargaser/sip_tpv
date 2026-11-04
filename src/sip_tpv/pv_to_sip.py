@@ -76,8 +76,9 @@ def pv_to_sip(header, preserve=False, add_reverse=True,
               help="Overwrite output file if it exists.")
 @click.option("--preserve-tpv", "--preserve_tpv", is_flag=True,
               help="Retain PV keywords in header.")
-@click.option("--add-reverse", "--add_reverse", is_flag=True,
-              help="Write the reverse SIP coefficients.")
+@click.option("--add-reverse/--no-add-reverse", "--add_reverse/--no_add_reverse",
+              default=True,
+              help="Write the reverse SIP coefficients (default: on).")
 @click.option("--aporder", default=None, type=int,
               help="Order for reverse polynomial, axis 1 (defaults to A_ORDER).")
 @click.option("--bporder", default=None, type=int,
