@@ -2,7 +2,7 @@
 Changelog
 =========
 
-2.0 (unreleased)
+2.0 (2026-11-04)
 ================
 
 Upgrading from 1.x
