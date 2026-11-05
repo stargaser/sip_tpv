@@ -63,3 +63,20 @@ def test_pv2sip():
 
     npt.assert_almost_equal(pix1, pixargs, 4)
     npt.assert_almost_equal(pix2, pixargs, 4)
+
+
+def test_sip2pv_without_reverse_coefficients():
+    """SIP->PV works when AP_ORDER/BP_ORDER are absent (issue #1)."""
+    sip_header = fits.Header.fromtextfile(DATA_DIR / "IRAC_3.6um_sip.txt")
+    control_header = sip_header.copy()
+    for key in [k for k in sip_header if k.startswith(("AP_", "BP_"))]:
+        del sip_header[key]
+    assert "AP_ORDER" not in sip_header
+
+    sip_to_pv(sip_header)
+    sip_to_pv(control_header)
+
+    pv_keys = [k for k in control_header if k.startswith("PV")]
+    assert pv_keys
+    for key in pv_keys:
+        assert sip_header[key] == control_header[key], key
