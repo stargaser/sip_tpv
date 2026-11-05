@@ -1,4 +1,12 @@
 *.pyc
+__pycache__/
+.pytest_cache/
+.venv/
+.uv/
+build/
+dist/
+*.egg-info/
 
-# Pycharm editor project files
-.idea
+# IDE settings
+.idea/
+.vscode/

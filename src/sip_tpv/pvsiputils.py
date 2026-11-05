@@ -10,7 +10,7 @@ This module includes the equations for converting from the SIP distortion repres
      and http://web.ipac.caltech.edu/staff/shupe/reprints/SIP_to_PV_SPIE2012.pdf .
 The work described in that paper is extended to 7th order.
 
-Copyright (c) 2012-2017, California Institute of Technology
+Copyright (c) 2012-2026, California Institute of Technology
 
 If you make use of this work, please cite:
 "More flexibility in representing geometric distortion in astronomical images,"
@@ -204,16 +204,16 @@ def get_sip_keywords(header):
 
     Returns:
     --------
-    cd (numpy.matrix) : the CD matrix from the FITS header
-    ac (numpy.matrix) : the A-coefficients from the FITS header
-    bc (numpy.matrix) : the B-coefficients from the FITS header
+    cd (numpy.ndarray) : the CD matrix from the FITS header
+    ac (numpy.ndarray) : the A-coefficients from the FITS header
+    bc (numpy.ndarray) : the B-coefficients from the FITS header
     """
-    cd = np.matrix([[header.get('CD1_1', 0.0), header.get('CD1_2', 0.0)],
-                    [header.get('CD2_1', 0.0), header.get('CD2_2', 0.0)]], dtype=np.float64)
+    cd = np.array([[header.get('CD1_1', 0.0), header.get('CD1_2', 0.0)],
+                   [header.get('CD2_1', 0.0), header.get('CD2_2', 0.0)]], dtype=np.float64)
     a_order = int(header.get('A_ORDER', 0))
     b_order = int(header.get('B_ORDER', 0))
-    ac = np.matrix(np.zeros((a_order+1, a_order+1), dtype=np.float64))
-    bc = np.matrix(np.zeros((b_order+1, b_order+1), dtype=np.float64))
+    ac = np.zeros((a_order+1, a_order+1), dtype=np.float64)
+    bc = np.zeros((b_order+1, b_order+1), dtype=np.float64)
     for m in range(a_order+1):
         for n in range(0, a_order+1-m):
             ac[m, n] = header.get('A_%d_%d' % (m, n), 0.0)
@@ -232,12 +232,12 @@ def get_pv_keywords(header):
 
     Returns:
     --------
-    cd (numpy.matrix) : the CD matrix from the FITS header
+    cd (numpy.ndarray) : the CD matrix from the FITS header
     pv1 (numpy.array) : the PV1-coefficients from the FITS header
     pv2 (numpy.array) : the PV2-coefficients from the FITS header
     """
-    cd = np.matrix([[header.get('CD1_1', 0.0), header.get('CD1_2', 0.0)],
-                    [header.get('CD2_1', 0.0), header.get('CD2_2', 0.0)]], dtype=np.float64)
+    cd = np.array([[header.get('CD1_1', 0.0), header.get('CD1_2', 0.0)],
+                   [header.get('CD2_1', 0.0), header.get('CD2_2', 0.0)]], dtype=np.float64)
     pv1 = np.zeros((40,), dtype=np.float64)
     pv2 = np.zeros((40,), dtype=np.float64)
     for k in range(40):
@@ -251,9 +251,9 @@ def real_sipexprs(cd, ac, bc):
 
     Parameters:
     -----------
-    cd (numpy.matrix) : the CD matrix from the FITS header
-    ac (numpy.matrix) : the A-coefficients from the FITS header
-    bc (numpy.matrix) : the B-coefficients from the FITS header
+    cd (numpy.ndarray) : the CD matrix from the FITS header
+    ac (numpy.ndarray) : the A-coefficients from the FITS header
+    bc (numpy.ndarray) : the B-coefficients from the FITS header
 
     Returns:
     --------
@@ -261,7 +261,7 @@ def real_sipexprs(cd, ac, bc):
     sipy (Sympy expr) : equation for y-distortion in SIP convention
     """
     x, y = symbols("x y")
-    cdinverse = cd**-1
+    cdinverse = Matrix(np.linalg.inv(cd))
     uprime, vprime = cdinverse*Matrix([x, y])
     usum = uprime
     vsum = vprime
@@ -273,7 +273,7 @@ def real_sipexprs(cd, ac, bc):
     for m in range(border+1):
         for n in range(0, border+1-m):
             vsum += bc[m, n]*uprime**m*vprime**n
-    sipx, sipy = cd*Matrix([usum, vsum])
+    sipx, sipy = Matrix(cd)*Matrix([usum, vsum])
     sipx = sipx.expand()
     sipy = sipy.expand()
     return sipx, sipy
@@ -284,7 +284,7 @@ def real_tpvexprs(cd, pv1, pv2):
 
     Parameters:
     -----------
-    cd (numpy.matrix) : the CD matrix from the FITS header
+    cd (numpy.ndarray) : the CD matrix from the FITS header
     pv1 (numpy.array) : the axis-1 coefficients from the FITS header
     pv2 (numpy.array) : the axis-2 coefficients from the FITS header
 
@@ -294,10 +294,10 @@ def real_tpvexprs(cd, pv1, pv2):
     tpvv (Sympy expr) : equation for v-distortion in TPV convention
     """
     u, v = symbols("u v")
-    x, y = cd*Matrix([u, v])
+    x, y = Matrix(cd)*Matrix([u, v])
 
     tpv1, tpv2 = compute_tpv(pv1, pv2, x, y)
-    cdinverse = cd**-1
+    cdinverse = Matrix(np.linalg.inv(cd))
     tpvu, tpvv = cdinverse*Matrix([tpv1, tpv2])
     tpvu = tpvu.expand()
     tpvv = tpvv.expand()
@@ -471,9 +471,7 @@ def add_reverse_coefficients(header, aporder, bporder):
     q = np.arange(0, naxis2, 4, dtype=np.float64) - crpix2
     u, v = np.meshgrid(r, q)
     cd, ac, bc = get_sip_keywords(header)
-    adist = np.array(ac)
-    bdist = np.array(bc)
-    apdist, bpdist = fitreverse(aporder, bporder, adist, bdist, u, v)
+    apdist, bpdist = fitreverse(aporder, bporder, ac, bc, u, v)
     for i in range(aporder+1):
         for j in range(0, aporder - i + 1):
                 header['AP_%d_%d' % (i, j)] = apdist[i, j]

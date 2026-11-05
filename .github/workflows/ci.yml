@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python ${{ matrix.python }} (${{ matrix.os }}, latest deps)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+        include:
+          - os: macos-latest
+            python: "3.15"
+          - os: windows-latest
+            python: "3.15"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      # --upgrade ignores the versions pinned in uv.lock, so this tests
+      # against the newest releases of every dependency.
+      - run: uv run --upgrade --python ${{ matrix.python }} pytest
+
+  test-minimum:
+    name: Python 3.11 (minimum deps)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      # lowest-direct installs exactly the minimum versions declared in
+      # pyproject.toml, so the floors stay honest.
+      - run: |
+          uv venv --python 3.11
+          uv pip install --resolution lowest-direct -e . "pytest>=8"
+          uv pip list
+          .venv/bin/python -m pytest
+
+  build:
+    name: Build and check distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: uv build
+      - run: uvx twine check --strict dist/*
